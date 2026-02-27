@@ -1,135 +1,290 @@
-# Turborepo starter
+<h1 align="center">asx</h1>
 
-This Turborepo starter is maintained by the Turborepo core team.
+**Asana from the command line - built for humans and AI agents.**<br>
+Tasks, projects, workspaces, and comments. Zero boilerplate. Structured JSON output. MCP-ready.
 
-## Using this example
+<p>
+  <a href="https://www.npmjs.com/package/@mwp13/asx"><img src="https://img.shields.io/npm/v/@mwp13/asx" alt="npm version"></a>
+  <a href="https://github.com/mwp13/asx/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mwp13/asx" alt="licence"></a>
+  <a href="https://github.com/mwp13/asx/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/mwp13/asx/ci.yml?branch=main&label=CI" alt="CI status"></a>
+</p>
+<br>
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
+```bash
+npm install -g @mwp13/asx
 ```
 
-## What's inside?
+> [!IMPORTANT]
+> This project is under active development. Expect breaking changes before v1.0.
 
-This Turborepo includes the following packages/apps:
+## Contents
 
-### Apps and Packages
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Authentication](#authentication)
+- [Commands](#commands)
+- [Output Format](#output-format)
+- [Packages](#packages)
+- [Development](#development)
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+## Prerequisites
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- **Node.js 18+**
+- **An Asana account** with a [Personal Access Token](https://developers.asana.com/docs/personal-access-token) (PAT)
 
-### Utilities
+## Installation
 
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+```bash
+npm install -g @mwp13/asx
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Or with pnpm:
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+```bash
+pnpm add -g @mwp13/asx
 ```
 
-### Develop
+## Quick Start
 
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+```bash
+asx auth add work --pat xoxp-...          # store a PAT
+asx workspaces list                       # list your workspaces
+asx tasks search "launch prep" --workspace 123456
+asx tasks create --name "Write docs" --project 789 --due 2026-03-10
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## Authentication
 
-```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+asx uses Asana Personal Access Tokens (PATs). Store them with `asx auth add`.
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+### Storing accounts
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+asx auth add work --pat xoxp-...                    # add an account
+asx auth add work --pat xoxp-... --workspace 123    # with default workspace (auto-used when --workspace is omitted)
+asx auth list                                       # list stored accounts
+asx auth status                                     # show current user info
+asx auth remove work                                # remove an account
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+Accounts are stored in `~/.config/asx/accounts.json` (respects `XDG_CONFIG_HOME`) with file permissions `0600`.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+> **Default workspace:** If you pass `--workspace <gid>` when adding an account, that workspace is used automatically by commands that require `--workspace` (e.g. `tasks search`, `projects list`) so you can omit it.
 
+### Resolution order
+
+| Priority | Source                | Set via                            |
+| -------- | --------------------- | ---------------------------------- |
+| 1        | `--account` flag      | Per-command override               |
+| 2        | Single stored account | Auto-selected when only one exists |
+
+If multiple accounts are stored and no `--account` flag is given, asx returns an error asking you to specify one.
+
+## Commands
+
+Every command outputs structured JSON to stdout. Logs and hints go to stderr.
+
+### `asx auth` - Manage authentication and accounts
+
+| Command                                                  | Description                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| `asx auth add <alias> --pat <token> [--workspace <gid>]` | Store a PAT under an alias (optionally with a default workspace) |
+| `asx auth list`                                          | List stored accounts                                             |
+| `asx auth status [--account <alias>]`                    | Show current user info (name, email, workspaces)                 |
+| `asx auth remove <alias>`                                | Remove a stored account                                          |
+
+```bash
+asx auth add work --pat xoxp-abc123 --workspace 456
+asx auth status --account work
 ```
-# With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
 
-# Without [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
+### `asx tasks` - Manage Asana tasks
+
+| Command                                      | Description              |
+| -------------------------------------------- | ------------------------ |
+| `asx tasks search <query> --workspace <gid>` | Search tasks by text     |
+| `asx tasks get <gid>`                        | Get full task details    |
+| `asx tasks create --name <name>`             | Create a new task        |
+| `asx tasks update <gid>`                     | Update a task            |
+| `asx tasks complete <gid>`                   | Mark a task as completed |
+| `asx tasks comment <gid> <text>`             | Add a comment to a task  |
+
+```bash
+# Search with filters
+asx tasks search "bug" --workspace 123 --assignee me --project 456
+
+# Create a task
+asx tasks create --name "Fix login" --project 789 --assignee me --due 2026-03-15 --notes "See ticket #42"
+
+# Update and complete
+asx tasks update 111 --name "Fix login flow" --due 2026-03-20
+asx tasks complete 111
+asx tasks comment 111 "Done, deployed to staging"
 ```
 
-## Useful Links
+#### tasks search flags
 
-Learn more about the power of Turborepo:
+| Flag                   | Required | Description                              |
+| ---------------------- | -------- | ---------------------------------------- |
+| `--workspace <gid>`    | Yes      | Workspace to search in                   |
+| `--assignee <gid\|me>` | No       | Filter by assignee                       |
+| `--project <gid>`      | No       | Filter by project                        |
+| `--completed`          | No       | Include completed tasks (default: false) |
+| `--account <alias>`    | No       | Account to use                           |
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+#### tasks create flags
+
+| Flag                   | Required | Description      |
+| ---------------------- | -------- | ---------------- |
+| `--name <text>`        | Yes      | Task name        |
+| `--project <gid>`      | No       | Add to project   |
+| `--assignee <gid\|me>` | No       | Assign to user   |
+| `--due <YYYY-MM-DD>`   | No       | Due date         |
+| `--notes <text>`       | No       | Task description |
+| `--account <alias>`    | No       | Account to use   |
+
+#### tasks update flags
+
+| Flag                   | Required | Description     |
+| ---------------------- | -------- | --------------- |
+| `--name <text>`        | No       | New task name   |
+| `--assignee <gid\|me>` | No       | New assignee    |
+| `--due <YYYY-MM-DD>`   | No       | New due date    |
+| `--notes <text>`       | No       | New description |
+| `--account <alias>`    | No       | Account to use  |
+
+### `asx projects` - Manage Asana projects
+
+| Command                               | Description                  |
+| ------------------------------------- | ---------------------------- |
+| `asx projects list --workspace <gid>` | List projects in a workspace |
+| `asx projects get <gid>`              | Get project details          |
+| `asx projects sections <gid>`         | List sections in a project   |
+
+```bash
+asx projects list --workspace 123
+asx projects list --workspace 123 --archived    # include archived
+asx projects get 456
+asx projects sections 456
+```
+
+#### projects list flags
+
+| Flag                | Required | Description                                |
+| ------------------- | -------- | ------------------------------------------ |
+| `--workspace <gid>` | Yes      | Workspace GID                              |
+| `--archived`        | No       | Include archived projects (default: false) |
+| `--account <alias>` | No       | Account to use                             |
+
+### `asx workspaces` - Manage Asana workspaces
+
+| Command               | Description                    |
+| --------------------- | ------------------------------ |
+| `asx workspaces list` | List all accessible workspaces |
+
+```bash
+asx workspaces list
+asx workspaces list --account work
+```
+
+#### workspaces list flags
+
+| Flag                | Required | Description                                                |
+| ------------------- | -------- | ---------------------------------------------------------- |
+| `--account <alias>` | No       | Account to use (see [Resolution order](#resolution-order)) |
+
+## Output Format
+
+All commands produce structured JSON with a `_meta` envelope:
+
+```json
+{
+  "_meta": {
+    "command": "tasks.search",
+    "version": "0.0.0",
+    "account": "work",
+    "timestamp": "2026-03-05T10:00:00.000Z"
+  },
+  "data": [ ... ]
+}
+```
+
+Errors also return JSON:
+
+```json
+{
+  "error": {
+    "code": "AUTH_REQUIRED",
+    "message": "No credentials found",
+    "suggestion": "Run `asx auth add <alias>` to add an account"
+  }
+}
+```
+
+### Exit codes
+
+| Code | Meaning              |
+| ---- | -------------------- |
+| 0    | Success              |
+| 1    | General error        |
+| 2    | Authentication error |
+| 3    | Input error          |
+| 4    | API error            |
+| 5    | Rate limited         |
+
+## Packages
+
+asx is a monorepo with two packages:
+
+| Package         | npm                                                                | Description                               |
+| --------------- | ------------------------------------------------------------------ | ----------------------------------------- |
+| `packages/core` | [`@mwp13/asx-core`](https://www.npmjs.com/package/@mwp13/asx-core) | Asana client, auth, errors, output, types |
+| `packages/cli`  | [`@mwp13/asx`](https://www.npmjs.com/package/@mwp13/asx)           | CLI binary (`asx`)                        |
+
+### Using the core library
+
+```typescript
+import { AsanaClient, resolvePat, collectAll } from "@mwp13/asx-core";
+
+const pat = await resolvePat({ process, account: "work" });
+const client = new AsanaClient({ pat });
+
+// Single request
+const task = await client.request({
+  path: "/tasks/123",
+  optFields: ["name", "completed", "assignee.name"],
+});
+
+// Paginated
+const allTasks = await collectAll(client, {
+  path: "/workspaces/456/tasks/search",
+  method: "POST",
+  body: { text: "launch" },
+});
+```
+
+## Development
+
+```bash
+pnpm install                      # install dependencies
+pnpm build                        # build all packages
+pnpm typecheck                    # type check
+pnpm test                         # run tests
+pnpm lint                         # lint with oxlint
+pnpm format                       # check formatting with oxfmt
+```
+
+### Stack
+
+- **Monorepo**: turborepo + pnpm workspaces
+- **Build**: tsup (ESM)
+- **Types**: TypeScript 5.9 (strict)
+- **Test**: vitest
+- **Lint**: oxlint + oxfmt
+- **CLI framework**: stricli
+- **Versioning**: changesets
+
+## Licence
+
+MIT

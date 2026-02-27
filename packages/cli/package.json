@@ -1,0 +1,28 @@
+{
+  "name": "@mwp13/asx",
+  "version": "0.0.0",
+  "bin": {
+    "asx": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@mwp13/asx-core": "workspace:*",
+    "@stricli/core": "^1.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.4.0",
+    "typescript": "5.9.2"
+  }
+}
