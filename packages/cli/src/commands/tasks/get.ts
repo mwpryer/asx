@@ -1,7 +1,17 @@
 import { buildCommand } from "@stricli/core";
-import { AsanaClient, formatJSON, resolvePat } from "@mwp13/asx-core";
+import {
+  AsanaClient,
+  formatJSON,
+  resolvePat,
+  validateGid,
+} from "@mwp13/asx-core";
 import type { AsxCliContext } from "../../context.js";
-import { accountFlag, type AccountFlag } from "../../flags.js";
+import {
+  accountFlag,
+  fieldsFlag,
+  type AccountFlag,
+  type FieldsFlag,
+} from "../../flags.js";
 
 export const getCommand = buildCommand({
   docs: { brief: "Get full details of a task" },
@@ -14,18 +24,21 @@ export const getCommand = buildCommand({
     },
     flags: {
       account: accountFlag,
+      fields: fieldsFlag,
     },
   },
   func: async function (
     this: AsxCliContext,
-    flags: AccountFlag,
+    flags: AccountFlag & FieldsFlag,
     taskGid: string,
   ) {
+    validateGid(taskGid, "task-gid");
+
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
     const res = await client.request({
       path: `/tasks/${taskGid}`,
-      optFields: [
+      optFields: flags.fields?.split(",") ?? [
         "name",
         "completed",
         "assignee.name",

@@ -4,14 +4,17 @@ import {
   InputError,
   formatJSON,
   resolveAuth,
+  validateGid,
 } from "@mwp13/asx-core";
 import type { AsxCliContext } from "../../context.js";
 import {
   accountFlag,
   DEFAULT_PAGE_LIMIT,
+  fieldsFlag,
   paginationFlags,
   paginationMeta,
   type AccountFlag,
+  type FieldsFlag,
   type PaginationFlags,
 } from "../../flags.js";
 
@@ -50,11 +53,13 @@ export const searchCommand = buildCommand({
         default: false,
       },
       account: accountFlag,
+      fields: fieldsFlag,
     },
   },
   func: async function (
     this: AsxCliContext,
     flags: AccountFlag &
+      FieldsFlag &
       PaginationFlags & {
         workspace: string | undefined;
         assignee: string | undefined;
@@ -63,6 +68,11 @@ export const searchCommand = buildCommand({
       },
     query: string,
   ) {
+    if (flags.workspace) validateGid(flags.workspace, "workspace");
+    if (flags.assignee && flags.assignee !== "me")
+      validateGid(flags.assignee, "assignee");
+    if (flags.project) validateGid(flags.project, "project");
+
     const auth = resolveAuth({ account: flags.account });
     const workspace = flags.workspace ?? auth.workspaceGid;
     if (!workspace) {
@@ -85,7 +95,7 @@ export const searchCommand = buildCommand({
     const res = await client.request({
       path: `/workspaces/${workspace}/tasks/search`,
       query: params,
-      optFields: [
+      optFields: flags.fields?.split(",") ?? [
         "name",
         "completed",
         "assignee.name",

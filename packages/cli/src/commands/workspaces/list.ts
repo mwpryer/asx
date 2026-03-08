@@ -4,9 +4,11 @@ import type { AsxCliContext } from "../../context.js";
 import {
   accountFlag,
   DEFAULT_PAGE_LIMIT,
+  fieldsFlag,
   paginationFlags,
   paginationMeta,
   type AccountFlag,
+  type FieldsFlag,
   type PaginationFlags,
 } from "../../flags.js";
 
@@ -17,11 +19,12 @@ export const listCommand = buildCommand({
     flags: {
       ...paginationFlags,
       account: accountFlag,
+      fields: fieldsFlag,
     },
   },
   func: async function (
     this: AsxCliContext,
-    flags: AccountFlag & PaginationFlags,
+    flags: AccountFlag & FieldsFlag & PaginationFlags,
   ) {
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
@@ -31,7 +34,7 @@ export const listCommand = buildCommand({
         limit: flags.limit ?? DEFAULT_PAGE_LIMIT,
         ...(flags.offset && { offset: flags.offset }),
       },
-      optFields: ["name", "is_organization"],
+      optFields: flags.fields?.split(",") ?? ["name", "is_organization"],
     });
 
     this.process.stdout.write(

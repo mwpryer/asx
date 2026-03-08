@@ -4,9 +4,22 @@ import {
   InputError,
   formatJSON,
   resolvePat,
+  sanitizeText,
+  validateDate,
+  validateGid,
 } from "@mwp13/asx-core";
 import type { AsxCliContext } from "../../context.js";
-import { accountFlag, type AccountFlag } from "../../flags.js";
+import {
+  accountFlag,
+  dryRunFlag,
+  fieldsFlag,
+  jsonFlag,
+  parseJsonInput,
+  type AccountFlag,
+  type DryRunFlag,
+  type FieldsFlag,
+  type JsonFlag,
+} from "../../flags.js";
 
 export const updateCommand = buildCommand({
   docs: { brief: "Update an existing task" },
@@ -43,38 +56,90 @@ export const updateCommand = buildCommand({
         optional: true,
       },
       account: accountFlag,
+      fields: fieldsFlag,
+      dryRun: dryRunFlag,
+      json: jsonFlag,
     },
   },
   func: async function (
     this: AsxCliContext,
-    flags: AccountFlag & {
-      name: string | undefined;
-      assignee: string | undefined;
-      due: string | undefined;
-      notes: string | undefined;
-    },
+    flags: AccountFlag &
+      FieldsFlag &
+      DryRunFlag &
+      JsonFlag & {
+        name: string | undefined;
+        assignee: string | undefined;
+        due: string | undefined;
+        notes: string | undefined;
+      },
     taskGid: string,
   ) {
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const body: Record<string, unknown> = {};
-    if (flags.name) body["name"] = flags.name;
-    if (flags.assignee) body["assignee"] = flags.assignee;
-    if (flags.due) body["due_on"] = flags.due;
-    if (flags.notes) body["notes"] = flags.notes;
+    validateGid(taskGid, "task-gid");
 
-    if (Object.keys(body).length === 0) {
+    const hasValueFlags =
+      flags.name !== undefined ||
+      flags.assignee !== undefined ||
+      flags.due !== undefined ||
+      flags.notes !== undefined;
+
+    if (flags.json && hasValueFlags) {
       throw new InputError(
-        "INPUT_MISSING",
-        "No update flags provided. Pass at least one of --name, --assignee, --due, or --notes.",
+        "INPUT_INVALID",
+        "--json is mutually exclusive with value flags (--name, --assignee, --due, --notes)",
+        "Use either --json or individual flags, not both",
       );
     }
 
+    let body: Record<string, unknown>;
+
+    if (flags.json) {
+      body = parseJsonInput(flags.json);
+    } else {
+      if (flags.name) sanitizeText(flags.name, "name", 1024);
+      if (flags.notes) sanitizeText(flags.notes, "notes");
+      if (flags.assignee && flags.assignee !== "me")
+        validateGid(flags.assignee, "assignee");
+      if (flags.due) validateDate(flags.due, "due");
+
+      body = {};
+      if (flags.name) body["name"] = flags.name;
+      if (flags.assignee) body["assignee"] = flags.assignee;
+      if (flags.due) body["due_on"] = flags.due;
+      if (flags.notes) body["notes"] = flags.notes;
+
+      if (Object.keys(body).length === 0) {
+        throw new InputError(
+          "INPUT_MISSING",
+          "No update flags provided. Pass at least one of --name, --assignee, --due, --notes, or use --json.",
+        );
+      }
+    }
+
+    const path = `/tasks/${taskGid}`;
+
+    if (flags.dryRun) {
+      this.process.stdout.write(
+        formatJSON(
+          { method: "PUT", path, body },
+          { command: "tasks.update", dry_run: true },
+        ) + "\n",
+      );
+      return;
+    }
+
+    const pat = resolvePat({ account: flags.account });
+    const client = new AsanaClient({ pat });
     const res = await client.request({
       method: "PUT",
-      path: `/tasks/${taskGid}`,
+      path,
       body,
-      optFields: ["name", "gid", "completed", "assignee.name", "due_on"],
+      optFields: flags.fields?.split(",") ?? [
+        "name",
+        "gid",
+        "completed",
+        "assignee.name",
+        "due_on",
+      ],
     });
 
     this.process.stdout.write(

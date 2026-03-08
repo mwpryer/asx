@@ -28,3 +28,19 @@ export type { ResolvePatOpts, ResolvedAuth } from "./auth/resolve.js";
 // Client
 export { AsanaClient } from "./client/asana-client.js";
 export type { AsanaResponse } from "./client/asana-client.js";
+
+// Validation
+export {
+  validateGid,
+  validateDate,
+  sanitizeText,
+} from "./validate/validators.js";
+
+// Field registries
+export {
+  TASK_FIELDS,
+  PROJECT_FIELDS,
+  WORKSPACE_FIELDS,
+  SECTION_FIELDS,
+  USER_FIELDS,
+} from "./types/fields.js";

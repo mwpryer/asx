@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "test": "vitest run"
   },
   "dependencies": {
     "@mwp13/asx-core": "workspace:*",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsup": "^8.4.0",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "vitest": "^3.2.1"
   }
 }

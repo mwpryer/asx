@@ -4,14 +4,17 @@ import {
   InputError,
   formatJSON,
   resolveAuth,
+  validateGid,
 } from "@mwp13/asx-core";
 import type { AsxCliContext } from "../../context.js";
 import {
   accountFlag,
   DEFAULT_PAGE_LIMIT,
+  fieldsFlag,
   paginationFlags,
   paginationMeta,
   type AccountFlag,
+  type FieldsFlag,
   type PaginationFlags,
 } from "../../flags.js";
 
@@ -33,16 +36,22 @@ export const listCommand = buildCommand({
         default: false,
       },
       account: accountFlag,
+      fields: fieldsFlag,
     },
   },
   func: async function (
     this: AsxCliContext,
     flags: AccountFlag &
+      FieldsFlag &
       PaginationFlags & {
         workspace: string | undefined;
         archived: boolean;
       },
   ) {
+    if (flags.workspace) {
+      validateGid(flags.workspace, "workspace");
+    }
+
     const auth = resolveAuth({ account: flags.account });
     const workspace = flags.workspace ?? auth.workspaceGid;
     if (!workspace) {
@@ -60,7 +69,12 @@ export const listCommand = buildCommand({
         limit: flags.limit ?? DEFAULT_PAGE_LIMIT,
         ...(flags.offset && { offset: flags.offset }),
       },
-      optFields: ["name", "archived", "color", "owner.name"],
+      optFields: flags.fields?.split(",") ?? [
+        "name",
+        "archived",
+        "color",
+        "owner.name",
+      ],
     });
 
     this.process.stdout.write(

@@ -1,7 +1,17 @@
 import { buildCommand } from "@stricli/core";
-import { AsanaClient, formatJSON, resolvePat } from "@mwp13/asx-core";
+import {
+  AsanaClient,
+  formatJSON,
+  resolvePat,
+  validateGid,
+} from "@mwp13/asx-core";
 import type { AsxCliContext } from "../../context.js";
-import { accountFlag, type AccountFlag } from "../../flags.js";
+import {
+  accountFlag,
+  fieldsFlag,
+  type AccountFlag,
+  type FieldsFlag,
+} from "../../flags.js";
 
 export const getCommand = buildCommand({
   docs: { brief: "Get project details" },
@@ -14,18 +24,21 @@ export const getCommand = buildCommand({
     },
     flags: {
       account: accountFlag,
+      fields: fieldsFlag,
     },
   },
   func: async function (
     this: AsxCliContext,
-    flags: AccountFlag,
+    flags: AccountFlag & FieldsFlag,
     projectGid: string,
   ) {
+    validateGid(projectGid, "project-gid");
+
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
     const res = await client.request({
       path: `/projects/${projectGid}`,
-      optFields: [
+      optFields: flags.fields?.split(",") ?? [
         "name",
         "archived",
         "color",
