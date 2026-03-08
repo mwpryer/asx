@@ -25,6 +25,8 @@ npm install -g @mwp13/asx
 - [Authentication](#authentication)
 - [Commands](#commands)
 - [Output Format](#output-format)
+- [Agent Features](#agent-features)
+- [Agent Context](#agent-context)
 - [Packages](#packages)
 - [Development](#development)
 
@@ -85,6 +87,36 @@ If multiple accounts are stored and no `--account` flag is given, asx returns an
 
 Every command outputs structured JSON to stdout. Logs and hints go to stderr.
 
+### Shared flags
+
+These flags appear on multiple commands:
+
+| Flag               | Applies to                                                              | Description                                        |
+| ------------------ | ----------------------------------------------------------------------- | -------------------------------------------------- |
+| `--account <alias>`| All commands that call the API                                          | Account to use (see [Resolution order](#resolution-order)) |
+| `--fields <fields>`| All resource-returning commands (`tasks`, `projects`, `workspaces`)     | Comma-separated field names to return (overrides defaults) |
+| `--dry-run`        | Mutating commands (`tasks create/update/complete/comment`)              | Preview the request without sending it             |
+| `--json <json>`    | Mutating commands (`tasks create/update/complete/comment`)              | Raw JSON request body (mutually exclusive with value flags) |
+
+### `asx describe` - Schema introspection
+
+| Command                  | Description                                    |
+| ------------------------ | ---------------------------------------------- |
+| `asx describe`           | List all commands and resource types            |
+| `asx describe <command>` | Show command schema (flags, args, types)        |
+| `asx describe <resource>`| Show available fields for a resource type       |
+
+```bash
+# List everything
+asx describe
+
+# Inspect a command's flags and args
+asx describe tasks.create
+
+# Discover available fields for a resource type
+asx describe task
+```
+
 ### `asx auth` - Manage authentication and accounts
 
 | Command                                                  | Description                                                      |
@@ -131,28 +163,35 @@ asx tasks comment 111 "Done, deployed to staging"
 | `--assignee <gid\|me>` | No       | Filter by assignee                       |
 | `--project <gid>`      | No       | Filter by project                        |
 | `--completed`          | No       | Include completed tasks (default: false) |
+| `--fields <fields>`    | No       | Comma-separated fields to return         |
 | `--account <alias>`    | No       | Account to use                           |
 
 #### tasks create flags
 
-| Flag                   | Required | Description      |
-| ---------------------- | -------- | ---------------- |
-| `--name <text>`        | Yes      | Task name        |
-| `--project <gid>`      | No       | Add to project   |
-| `--assignee <gid\|me>` | No       | Assign to user   |
-| `--due <YYYY-MM-DD>`   | No       | Due date         |
-| `--notes <text>`       | No       | Task description |
-| `--account <alias>`    | No       | Account to use   |
+| Flag                   | Required | Description                                         |
+| ---------------------- | -------- | --------------------------------------------------- |
+| `--name <text>`        | Yes      | Task name                                           |
+| `--project <gid>`      | No       | Add to project                                      |
+| `--assignee <gid\|me>` | No       | Assign to user                                      |
+| `--due <YYYY-MM-DD>`   | No       | Due date                                            |
+| `--notes <text>`       | No       | Task description                                    |
+| `--fields <fields>`    | No       | Comma-separated fields to return                    |
+| `--json <json>`        | No       | Raw JSON body (mutually exclusive with value flags) |
+| `--dry-run`            | No       | Preview request without sending                     |
+| `--account <alias>`    | No       | Account to use                                      |
 
 #### tasks update flags
 
-| Flag                   | Required | Description     |
-| ---------------------- | -------- | --------------- |
-| `--name <text>`        | No       | New task name   |
-| `--assignee <gid\|me>` | No       | New assignee    |
-| `--due <YYYY-MM-DD>`   | No       | New due date    |
-| `--notes <text>`       | No       | New description |
-| `--account <alias>`    | No       | Account to use  |
+| Flag                   | Required | Description                                         |
+| ---------------------- | -------- | --------------------------------------------------- |
+| `--name <text>`        | No       | New task name                                       |
+| `--assignee <gid\|me>` | No       | New assignee                                        |
+| `--due <YYYY-MM-DD>`   | No       | New due date                                        |
+| `--notes <text>`       | No       | New description                                     |
+| `--fields <fields>`    | No       | Comma-separated fields to return                    |
+| `--json <json>`        | No       | Raw JSON body (mutually exclusive with value flags) |
+| `--dry-run`            | No       | Preview request without sending                     |
+| `--account <alias>`    | No       | Account to use                                      |
 
 ### `asx projects` - Manage Asana projects
 
@@ -175,6 +214,7 @@ asx projects sections 456
 | ------------------- | -------- | ------------------------------------------ |
 | `--workspace <gid>` | Yes      | Workspace GID                              |
 | `--archived`        | No       | Include archived projects (default: false) |
+| `--fields <fields>` | No       | Comma-separated fields to return           |
 | `--account <alias>` | No       | Account to use                             |
 
 ### `asx workspaces` - Manage Asana workspaces
@@ -192,6 +232,7 @@ asx workspaces list --account work
 
 | Flag                | Required | Description                                                |
 | ------------------- | -------- | ---------------------------------------------------------- |
+| `--fields <fields>` | No       | Comma-separated fields to return                           |
 | `--account <alias>` | No       | Account to use (see [Resolution order](#resolution-order)) |
 
 ## Output Format
@@ -232,6 +273,62 @@ Errors also return JSON:
 | 3    | Input error          |
 | 4    | API error            |
 | 5    | Rate limited         |
+
+## Agent Features
+
+asx is designed for AI agent use. These features help agents interact safely and efficiently.
+
+### Input validation
+
+GIDs, dates, and text are validated before any API call. Invalid input returns `INPUT_INVALID` (exit 3) with a `suggestion` field — no wasted API calls.
+
+```bash
+asx tasks get abc    # exit 3: "Invalid GID: must be numeric"
+```
+
+### Field selection (`--fields`)
+
+Control which fields are returned to keep responses small and context windows lean. Available on all resource-returning commands.
+
+```bash
+asx tasks get 123 --fields name,due_on
+asx tasks search "bug" --workspace 456 --fields name,assignee.name
+```
+
+Use `asx describe task` to discover available fields for a resource type.
+
+### Dry-run mode (`--dry-run`)
+
+Preview mutation requests without sending them. No auth required. Available on `tasks create`, `tasks update`, `tasks complete`, and `tasks comment`.
+
+```bash
+asx tasks create --name "Deploy v2" --project 789 --dry-run
+```
+
+### Raw JSON input (`--json`)
+
+Pass a raw JSON request body for complex payloads. Mutually exclusive with value flags (`--name`, `--notes`, etc.). Combine with `--dry-run` to preview.
+
+```bash
+asx tasks create --json '{"name":"Deploy v2","custom_fields":{"12345":"high"}}' --dry-run
+```
+
+### Schema introspection (`asx describe`)
+
+Discover commands, flags, and fields at runtime — no docs needed.
+
+```bash
+asx describe                # list all commands and resource types
+asx describe tasks.create   # show flags, args, and types for a command
+asx describe task           # show available fields for a resource type
+```
+
+## Agent Context
+
+asx ships with context files for AI agents and tool frameworks:
+
+- **`AGENTS.md`** — Agent integration guide covering auth, pagination, error handling, field selection, dry-run, raw JSON, rate limiting, schema introspection, and input validation.
+- **`skills/*.md`** — Per-command-group skill files (`tasks.md`, `projects.md`, `auth.md`, `workspaces.md`) with YAML frontmatter declaring requirements. These provide focused context that agents can load on demand.
 
 ## Packages
 
