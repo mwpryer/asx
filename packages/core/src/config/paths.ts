@@ -5,13 +5,10 @@ import path from "path";
 export function configDir(): string {
   const platform = process.platform;
   if (platform === "win32") {
-    const appData = process.env["APPDATA"];
-    return appData
-      ? path.join(appData, "asx")
-      : path.join(os.homedir(), "AppData", "Roaming", "asx");
-  }
-  if (platform === "darwin") {
-    return path.join(os.homedir(), "Library", "Application Support", "asx");
+    const localAppData = process.env["LOCALAPPDATA"];
+    return localAppData
+      ? path.join(localAppData, "asx")
+      : path.join(os.homedir(), "AppData", "Local", "asx");
   }
   const xdg = process.env["XDG_CONFIG_HOME"];
   return xdg

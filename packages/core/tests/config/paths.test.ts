@@ -6,13 +6,13 @@ afterEach(() => {
 });
 
 describe("configDir", () => {
-  it("uses XDG_CONFIG_HOME on linux", () => {
+  it("uses XDG_CONFIG_HOME when set", () => {
     vi.stubEnv("XDG_CONFIG_HOME", "/custom/config");
     const dir = configDir();
     expect(dir).toBe("/custom/config/asx");
   });
 
-  it("falls back to ~/.config/asx on linux", () => {
+  it("falls back to ~/.config/asx", () => {
     delete process.env["XDG_CONFIG_HOME"];
     const dir = configDir();
     expect(dir).toContain(".config/asx");

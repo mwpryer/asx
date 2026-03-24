@@ -70,7 +70,7 @@ asx auth status                                     # show current user info
 asx auth remove work                                # remove an account
 ```
 
-Accounts are stored in `~/.config/asx/accounts.json` (respects `XDG_CONFIG_HOME`) with file permissions `0600`.
+Accounts are stored in `~/.config/asx/accounts.json` (respects `XDG_CONFIG_HOME`; Windows: `%LOCALAPPDATA%\asx\`) with file permissions `0600`.
 
 > **Default workspace:** If you pass `--workspace <gid>` when adding an account, that workspace is used automatically by commands that require `--workspace` (e.g. `tasks search`, `projects list`) so you can omit it.
 
