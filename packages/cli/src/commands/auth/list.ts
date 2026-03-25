@@ -1,6 +1,8 @@
 import { buildCommand } from "@stricli/core";
+
 import { formatJSON, loadAccounts } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 
 export const listCommand = buildCommand({
   docs: { brief: "List configured accounts" },
@@ -8,7 +10,7 @@ export const listCommand = buildCommand({
     positional: { kind: "tuple", parameters: [] },
     flags: {},
   },
-  func: async function (this: AsxCliContext) {
+  func: asxFunc(async function (this: AsxCliContext) {
     const accounts = loadAccounts();
     const data = {
       accounts: Object.entries(accounts).map(([alias, acct]) => ({
@@ -21,5 +23,5 @@ export const listCommand = buildCommand({
     this.process.stdout.write(
       formatJSON(data, { command: "auth.list" }) + "\n",
     );
-  },
+  }),
 });

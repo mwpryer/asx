@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatJSON } from "../../src/output/json.js";
+
+import { formatJSON } from "@/output/json";
 
 describe("formatJSON", () => {
   it("wraps data with _meta envelope", () => {
@@ -33,5 +34,15 @@ describe("formatJSON", () => {
   it("omits pagination when not provided", () => {
     const result = JSON.parse(formatJSON({}, { command: "x" }));
     expect(result._meta.pagination).toBeUndefined();
+  });
+
+  it("includes dry_run when provided", () => {
+    const result = JSON.parse(formatJSON({}, { command: "x", dry_run: true }));
+    expect(result._meta.dry_run).toBe(true);
+  });
+
+  it("omits dry_run when not provided", () => {
+    const result = JSON.parse(formatJSON({}, { command: "x" }));
+    expect(result._meta.dry_run).toBeUndefined();
   });
 });

@@ -1,17 +1,19 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   formatJSON,
   resolvePat,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   fieldsFlag,
   type AccountFlag,
   type FieldsFlag,
-} from "../../flags.js";
+} from "@/flags";
 
 export const getCommand = buildCommand({
   docs: { brief: "Get full details of a task" },
@@ -27,7 +29,7 @@ export const getCommand = buildCommand({
       fields: fieldsFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag & FieldsFlag,
     taskGid: string,
@@ -40,13 +42,19 @@ export const getCommand = buildCommand({
       path: `/tasks/${taskGid}`,
       optFields: flags.fields?.split(",") ?? [
         "name",
+        "resource_subtype",
         "completed",
+        "completed_at",
         "assignee.name",
         "due_on",
+        "start_on",
         "notes",
+        "num_subtasks",
         "projects.name",
         "tags.name",
         "parent.name",
+        "custom_fields.name",
+        "custom_fields.display_value",
         "permalink_url",
         "created_at",
         "modified_at",
@@ -56,5 +64,5 @@ export const getCommand = buildCommand({
     this.process.stdout.write(
       formatJSON({ task: res.data }, { command: "tasks.get" }) + "\n",
     );
-  },
+  }),
 });

@@ -1,21 +1,23 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   formatJSON,
   resolvePat,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
-  DEFAULT_PAGE_LIMIT,
+  resolveLimit,
   fieldsFlag,
   paginationFlags,
   paginationMeta,
   type AccountFlag,
   type FieldsFlag,
   type PaginationFlags,
-} from "../../flags.js";
+} from "@/flags";
 
 export const sectionsCommand = buildCommand({
   docs: { brief: "List sections in a project" },
@@ -32,7 +34,7 @@ export const sectionsCommand = buildCommand({
       fields: fieldsFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag & FieldsFlag & PaginationFlags,
     projectGid: string,
@@ -44,7 +46,7 @@ export const sectionsCommand = buildCommand({
     const res = await client.request({
       path: `/projects/${projectGid}/sections`,
       query: {
-        limit: flags.limit ?? DEFAULT_PAGE_LIMIT,
+        limit: resolveLimit(flags),
         ...(flags.offset && { offset: flags.offset }),
       },
       optFields: flags.fields?.split(",") ?? ["name", "created_at"],
@@ -56,5 +58,5 @@ export const sectionsCommand = buildCommand({
         { command: "projects.sections", pagination: paginationMeta(res) },
       ) + "\n",
     );
-  },
+  }),
 });

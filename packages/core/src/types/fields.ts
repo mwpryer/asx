@@ -1,8 +1,4 @@
-/**
- * Static field registries for Asana resource types.
- * Used by the `describe` command to expose available opt_fields.
- */
-
+// Field registries for Asana resource types, used by describe command
 export const TASK_FIELDS = [
   "gid",
   "name",
@@ -40,6 +36,12 @@ export const PROJECT_FIELDS = [
   "name",
   "archived",
   "color",
+  "icon",
+  "privacy_setting",
+  "completed",
+  "completed_at",
+  "completed_by",
+  "completed_by.name",
   "owner",
   "owner.name",
   "team",
@@ -54,7 +56,13 @@ export const PROJECT_FIELDS = [
   "due_on",
   "start_on",
   "default_view",
-  "public",
+  "default_access_level",
+  "minimum_access_level_for_customization",
+  "minimum_access_level_for_sharing",
+  "current_status_update",
+  "current_status_update.title",
+  "followers",
+  "followers.name",
   "members",
   "members.name",
   "custom_fields",

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { configDir, accountsPath } from "../../src/config/paths.js";
+
+import { configDir, accountsPath } from "@/config/paths";
 
 afterEach(() => {
   vi.unstubAllEnvs();

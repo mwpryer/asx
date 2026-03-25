@@ -1,6 +1,7 @@
 import { buildApplication, text_en } from "@stricli/core";
 import type { CommandContext, RouteMap, Application } from "@stricli/core";
-import { AsxError } from "./errors/errors.js";
+
+import { AsxError } from "@/errors/errors";
 
 function formatAsxError(exc: unknown): string {
   if (exc instanceof AsxError) {
@@ -21,6 +22,7 @@ export function buildAsxApp<C extends CommandContext>(
   return buildApplication(routes, {
     name: opts.name,
     versionInfo: { currentVersion: opts.version },
+    scanner: { caseStyle: "allow-kebab-for-camel" },
     determineExitCode: (err) => (err instanceof AsxError ? err.exitCode : 1),
     localization: {
       loadText: () => ({

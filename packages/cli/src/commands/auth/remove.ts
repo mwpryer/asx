@@ -1,6 +1,8 @@
 import { buildCommand } from "@stricli/core";
-import { InputError, logger, removeAccount } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+
+import { InputError, hint, removeAccount } from "@mwp13/asx-core";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 
 export const removeCommand = buildCommand({
   docs: { brief: "Remove a stored account" },
@@ -17,10 +19,14 @@ export const removeCommand = buildCommand({
     },
     flags: {},
   },
-  func: async function (this: AsxCliContext, _flags: {}, alias: string) {
+  func: asxFunc(async function (
+    this: AsxCliContext,
+    _flags: {},
+    alias: string,
+  ) {
     if (!removeAccount(alias)) {
       throw new InputError("INPUT_INVALID", `Account "${alias}" not found`);
     }
-    logger.hint(`Account "${alias}" removed`);
-  },
+    hint(`Account "${alias}" removed`);
+  }),
 });

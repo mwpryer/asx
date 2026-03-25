@@ -1,10 +1,12 @@
 import { buildRouteMap } from "@stricli/core";
+
 import { buildAsxApp } from "@mwp13/asx-core";
-import { authRouteMap } from "./commands/auth/route-map.js";
-import { tasksRouteMap } from "./commands/tasks/route-map.js";
-import { projectsRouteMap } from "./commands/projects/route-map.js";
-import { workspacesRouteMap } from "./commands/workspaces/route-map.js";
-import { describeCommand } from "./commands/describe/describe.js";
+import { authRouteMap } from "@/commands/auth/route-map";
+import { describeCommand } from "@/commands/describe/describe";
+import { projectsRouteMap } from "@/commands/projects/route-map";
+import { tasksRouteMap } from "@/commands/tasks/route-map";
+import { usersRouteMap } from "@/commands/users/route-map";
+import { workspacesRouteMap } from "@/commands/workspaces/route-map";
 
 const rootRouteMap = buildRouteMap({
   routes: {
@@ -12,6 +14,7 @@ const rootRouteMap = buildRouteMap({
     tasks: tasksRouteMap,
     projects: projectsRouteMap,
     workspaces: workspacesRouteMap,
+    users: usersRouteMap,
     describe: describeCommand,
   },
   docs: {
@@ -21,5 +24,5 @@ const rootRouteMap = buildRouteMap({
 
 export const app = buildAsxApp(rootRouteMap, {
   name: "asx",
-  version: "0.0.0",
+  version: __ASX_VERSION__,
 });

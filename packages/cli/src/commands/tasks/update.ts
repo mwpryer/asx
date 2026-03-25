@@ -1,4 +1,5 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   InputError,
@@ -8,7 +9,8 @@ import {
   validateDate,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   dryRunFlag,
@@ -19,7 +21,7 @@ import {
   type DryRunFlag,
   type FieldsFlag,
   type JsonFlag,
-} from "../../flags.js";
+} from "@/flags";
 
 export const updateCommand = buildCommand({
   docs: { brief: "Update an existing task" },
@@ -55,13 +57,19 @@ export const updateCommand = buildCommand({
         parse: String,
         optional: true,
       },
+      startOn: {
+        kind: "parsed",
+        brief: "Start date (YYYY-MM-DD)",
+        parse: String,
+        optional: true,
+      },
       account: accountFlag,
       fields: fieldsFlag,
       dryRun: dryRunFlag,
       json: jsonFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag &
       FieldsFlag &
@@ -71,6 +79,7 @@ export const updateCommand = buildCommand({
         assignee: string | undefined;
         due: string | undefined;
         notes: string | undefined;
+        startOn: string | undefined;
       },
     taskGid: string,
   ) {
@@ -80,12 +89,13 @@ export const updateCommand = buildCommand({
       flags.name !== undefined ||
       flags.assignee !== undefined ||
       flags.due !== undefined ||
-      flags.notes !== undefined;
+      flags.notes !== undefined ||
+      flags.startOn !== undefined;
 
     if (flags.json && hasValueFlags) {
       throw new InputError(
         "INPUT_INVALID",
-        "--json is mutually exclusive with value flags (--name, --assignee, --due, --notes)",
+        "--json is mutually exclusive with value flags (--name, --assignee, --due, --notes, --start-on)",
         "Use either --json or individual flags, not both",
       );
     }
@@ -95,22 +105,28 @@ export const updateCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (flags.name) sanitizeText(flags.name, "name", 1024);
-      if (flags.notes) sanitizeText(flags.notes, "notes");
+      const name = flags.name
+        ? sanitizeText(flags.name, "name", 1024)
+        : undefined;
+      const notes = flags.notes
+        ? sanitizeText(flags.notes, "notes")
+        : undefined;
       if (flags.assignee && flags.assignee !== "me")
         validateGid(flags.assignee, "assignee");
       if (flags.due) validateDate(flags.due, "due");
+      if (flags.startOn) validateDate(flags.startOn, "start-on");
 
       body = {};
-      if (flags.name) body["name"] = flags.name;
+      if (name) body["name"] = name;
       if (flags.assignee) body["assignee"] = flags.assignee;
       if (flags.due) body["due_on"] = flags.due;
-      if (flags.notes) body["notes"] = flags.notes;
+      if (flags.startOn) body["start_on"] = flags.startOn;
+      if (notes) body["notes"] = notes;
 
       if (Object.keys(body).length === 0) {
         throw new InputError(
           "INPUT_MISSING",
-          "No update flags provided. Pass at least one of --name, --assignee, --due, --notes, or use --json.",
+          "No update flags provided. Pass at least one of --name, --assignee, --due, --start-on, --notes, or use --json.",
         );
       }
     }
@@ -139,11 +155,13 @@ export const updateCommand = buildCommand({
         "completed",
         "assignee.name",
         "due_on",
+        "notes",
+        "permalink_url",
       ],
     });
 
     this.process.stdout.write(
       formatJSON({ task: res.data }, { command: "tasks.update" }) + "\n",
     );
-  },
+  }),
 });

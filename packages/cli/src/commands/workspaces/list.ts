@@ -1,16 +1,18 @@
 import { buildCommand } from "@stricli/core";
+
 import { AsanaClient, formatJSON, resolvePat } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
-  DEFAULT_PAGE_LIMIT,
+  resolveLimit,
   fieldsFlag,
   paginationFlags,
   paginationMeta,
   type AccountFlag,
   type FieldsFlag,
   type PaginationFlags,
-} from "../../flags.js";
+} from "@/flags";
 
 export const listCommand = buildCommand({
   docs: { brief: "List accessible workspaces" },
@@ -22,7 +24,7 @@ export const listCommand = buildCommand({
       fields: fieldsFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag & FieldsFlag & PaginationFlags,
   ) {
@@ -31,7 +33,7 @@ export const listCommand = buildCommand({
     const res = await client.request({
       path: "/workspaces",
       query: {
-        limit: flags.limit ?? DEFAULT_PAGE_LIMIT,
+        limit: resolveLimit(flags),
         ...(flags.offset && { offset: flags.offset }),
       },
       optFields: flags.fields?.split(",") ?? ["name", "is_organization"],
@@ -43,5 +45,5 @@ export const listCommand = buildCommand({
         { command: "workspaces.list", pagination: paginationMeta(res) },
       ) + "\n",
     );
-  },
+  }),
 });

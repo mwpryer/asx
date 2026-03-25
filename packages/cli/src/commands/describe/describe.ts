@@ -1,4 +1,5 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   formatJSON,
   TASK_FIELDS,
@@ -7,8 +8,8 @@ import {
   SECTION_FIELDS,
   USER_FIELDS,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
-import { COMMAND_SCHEMAS } from "./schemas.js";
+import type { AsxCliContext } from "@/context";
+import { COMMAND_SCHEMAS } from "@/commands/describe/schemas";
 
 const RESOURCE_FIELDS: Record<string, readonly string[]> = {
   task: TASK_FIELDS,

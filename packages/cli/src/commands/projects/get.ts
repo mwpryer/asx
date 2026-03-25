@@ -1,17 +1,19 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   formatJSON,
   resolvePat,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   fieldsFlag,
   type AccountFlag,
   type FieldsFlag,
-} from "../../flags.js";
+} from "@/flags";
 
 export const getCommand = buildCommand({
   docs: { brief: "Get project details" },
@@ -27,7 +29,7 @@ export const getCommand = buildCommand({
       fields: fieldsFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag & FieldsFlag,
     projectGid: string,
@@ -46,6 +48,11 @@ export const getCommand = buildCommand({
         "owner.name",
         "workspace.name",
         "team.name",
+        "due_on",
+        "start_on",
+        "default_view",
+        "privacy_setting",
+        "permalink_url",
         "created_at",
         "modified_at",
       ],
@@ -54,5 +61,5 @@ export const getCommand = buildCommand({
     this.process.stdout.write(
       formatJSON({ project: res.data }, { command: "projects.get" }) + "\n",
     );
-  },
+  }),
 });

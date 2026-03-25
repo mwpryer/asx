@@ -1,22 +1,25 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   InputError,
   formatJSON,
   resolveAuth,
+  validateDate,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
-  DEFAULT_PAGE_LIMIT,
+  resolveLimit,
   fieldsFlag,
   paginationFlags,
   paginationMeta,
   type AccountFlag,
   type FieldsFlag,
   type PaginationFlags,
-} from "../../flags.js";
+} from "@/flags";
 
 export const searchCommand = buildCommand({
   docs: { brief: "Search tasks in a workspace" },
@@ -52,11 +55,52 @@ export const searchCommand = buildCommand({
         brief: "Include completed tasks",
         default: false,
       },
+      dueBefore: {
+        kind: "parsed",
+        brief: "Tasks due before this date (YYYY-MM-DD)",
+        parse: String,
+        optional: true,
+      },
+      dueAfter: {
+        kind: "parsed",
+        brief: "Tasks due after this date (YYYY-MM-DD)",
+        parse: String,
+        optional: true,
+      },
+      sortBy: {
+        kind: "parsed",
+        brief:
+          "Sort results by: due_date, created_at, completed_at, likes, modified_at",
+        parse: String,
+        optional: true,
+      },
+      sortAscending: {
+        kind: "boolean",
+        brief: "Sort in ascending order (default: false)",
+        default: false,
+      },
+      tag: {
+        kind: "parsed",
+        brief: "Tag GID to filter by",
+        parse: String,
+        optional: true,
+      },
+      section: {
+        kind: "parsed",
+        brief: "Section GID to filter by",
+        parse: String,
+        optional: true,
+      },
+      isSubtask: {
+        kind: "boolean",
+        brief: "Filter to subtasks only",
+        default: false,
+      },
       account: accountFlag,
       fields: fieldsFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag &
       FieldsFlag &
@@ -65,6 +109,13 @@ export const searchCommand = buildCommand({
         assignee: string | undefined;
         project: string | undefined;
         completed: boolean;
+        dueBefore: string | undefined;
+        dueAfter: string | undefined;
+        sortBy: string | undefined;
+        sortAscending: boolean;
+        tag: string | undefined;
+        section: string | undefined;
+        isSubtask: boolean;
       },
     query: string,
   ) {
@@ -72,6 +123,24 @@ export const searchCommand = buildCommand({
     if (flags.assignee && flags.assignee !== "me")
       validateGid(flags.assignee, "assignee");
     if (flags.project) validateGid(flags.project, "project");
+    if (flags.tag) validateGid(flags.tag, "tag");
+    if (flags.section) validateGid(flags.section, "section");
+    if (flags.dueBefore) validateDate(flags.dueBefore, "due-before");
+    if (flags.dueAfter) validateDate(flags.dueAfter, "due-after");
+    const validSortValues = [
+      "due_date",
+      "created_at",
+      "completed_at",
+      "likes",
+      "modified_at",
+    ];
+    if (flags.sortBy && !validSortValues.includes(flags.sortBy)) {
+      throw new InputError(
+        "INPUT_INVALID",
+        `Invalid --sort-by value: "${flags.sortBy}"`,
+        `Must be one of: ${validSortValues.join(", ")}`,
+      );
+    }
 
     const auth = resolveAuth({ account: flags.account });
     const workspace = flags.workspace ?? auth.workspaceGid;
@@ -85,12 +154,19 @@ export const searchCommand = buildCommand({
     const client = new AsanaClient({ pat: auth.pat });
     const params: Record<string, string | number | boolean | undefined> = {
       text: query,
-      limit: flags.limit ?? DEFAULT_PAGE_LIMIT,
+      limit: resolveLimit(flags),
       ...(flags.offset && { offset: flags.offset }),
     };
     if (flags.assignee) params["assignee.any"] = flags.assignee;
     if (flags.project) params["projects.any"] = flags.project;
-    if (flags.completed) params["completed"] = true;
+    if (!flags.completed) params["completed"] = false;
+    if (flags.dueBefore) params["due_on.before"] = flags.dueBefore;
+    if (flags.dueAfter) params["due_on.after"] = flags.dueAfter;
+    if (flags.tag) params["tags.any"] = flags.tag;
+    if (flags.section) params["sections.any"] = flags.section;
+    if (flags.isSubtask) params["is_subtask"] = true;
+    if (flags.sortBy) params["sort_by"] = flags.sortBy;
+    if (flags.sortBy) params["sort_ascending"] = flags.sortAscending;
 
     const res = await client.request({
       path: `/workspaces/${workspace}/tasks/search`,
@@ -110,5 +186,5 @@ export const searchCommand = buildCommand({
         { command: "tasks.search", pagination: paginationMeta(res) },
       ) + "\n",
     );
-  },
+  }),
 });

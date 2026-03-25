@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+
 import {
   AuthError,
   ApiError,
@@ -7,7 +8,7 @@ import {
   EXIT_API,
   EXIT_RATE_LIMITED,
   EXIT_INPUT,
-} from "../../src/errors/errors.js";
+} from "@/errors/errors";
 
 describe("AuthError", () => {
   it("sets code, message, suggestion, exitCode", () => {
@@ -76,6 +77,30 @@ describe("InputError", () => {
     const err = new InputError("INPUT_INVALID", "bad input");
     expect(err.code).toBe("INPUT_INVALID");
     expect(err.message).toBe("bad input");
+    expect(err.exitCode).toBe(EXIT_INPUT);
+  });
+
+  it("toJSON includes suggestion when present", () => {
+    const err = new InputError("INPUT_INVALID", "bad input", "Try again");
+    expect(err.toJSON()).toEqual({
+      error: {
+        code: "INPUT_INVALID",
+        message: "bad input",
+        suggestion: "Try again",
+      },
+    });
+  });
+
+  it("toJSON omits suggestion when absent", () => {
+    const err = new InputError("INPUT_INVALID", "bad input");
+    expect(err.toJSON()).toEqual({
+      error: { code: "INPUT_INVALID", message: "bad input" },
+    });
+  });
+
+  it("supports INPUT_MISSING code", () => {
+    const err = new InputError("INPUT_MISSING", "name is required");
+    expect(err.code).toBe("INPUT_MISSING");
     expect(err.exitCode).toBe(EXIT_INPUT);
   });
 });

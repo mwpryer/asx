@@ -1,4 +1,4 @@
-import { ApiError } from "../errors/errors.js";
+import { ApiError } from "@/errors/errors";
 
 export interface RetryOpts {
   retries?: number;
@@ -24,8 +24,13 @@ export async function retryAsync<T>(
     } catch (err) {
       lastError = err;
       if (!isRetryable(err) || attempt === retries) break;
+      const retryAfterMs =
+        err instanceof ApiError && err.retryAfter
+          ? err.retryAfter * 1000
+          : undefined;
       const jitter = Math.random() * 0.5 + 0.75;
-      const delay = baseDelay * Math.pow(multiplier, attempt) * jitter;
+      const delay =
+        retryAfterMs ?? baseDelay * Math.pow(multiplier, attempt) * jitter;
       await sleep(delay);
     }
   }

@@ -1,18 +1,36 @@
 import { describe, it, expect } from "vitest";
-import { AsanaClient } from "../../src/client/asana-client.js";
-import { AuthError, ApiError } from "../../src/errors/errors.js";
+
+import { AuthError, ApiError } from "@/errors/errors";
+import { AsanaClient } from "@/client/asana-client";
+
+interface CapturedRequest {
+  url: string;
+  init: RequestInit;
+}
 
 function fakeFetch(
-  response: { data?: unknown; errors?: Array<{ message: string }> },
+  response:
+    | {
+        data?: unknown;
+        next_page?: unknown;
+        errors?: Array<{ message: string }>;
+      }
+    | undefined,
   status = 200,
+  captured?: CapturedRequest[],
 ): typeof globalThis.fetch {
-  return async () =>
-    ({
+  return async (input, init?) => {
+    captured?.push({ url: String(input), init: init ?? {} });
+    return {
       ok: status >= 200 && status < 300,
       status,
-      json: () => Promise.resolve(response),
-      text: () => Promise.resolve(JSON.stringify(response)),
-    }) as Response;
+      json: () =>
+        response !== undefined
+          ? Promise.resolve(response)
+          : Promise.reject(new Error("no body")),
+      text: () => Promise.resolve(JSON.stringify(response ?? "")),
+    } as Response;
+  };
 }
 
 function makeClient(fetch: typeof globalThis.fetch) {
@@ -26,14 +44,93 @@ describe("AsanaClient", () => {
     expect(res.data).toEqual({ gid: "1", name: "Task" });
   });
 
-  it("sends body and returns data for POST", async () => {
-    const client = makeClient(fakeFetch({ data: { gid: "2" } }));
-    const res = await client.request({
+  it("sends Authorization header with PAT", async () => {
+    const captured: CapturedRequest[] = [];
+    const client = makeClient(fakeFetch({ data: {} }, 200, captured));
+    await client.request({ path: "/tasks/1" });
+    expect(captured[0]!.init.headers).toEqual(
+      expect.objectContaining({ Authorization: "Bearer test-pat" }),
+    );
+  });
+
+  it("wraps POST body in { data: ... }", async () => {
+    const captured: CapturedRequest[] = [];
+    const client = makeClient(fakeFetch({ data: { gid: "2" } }, 200, captured));
+    await client.request({
       method: "POST",
       path: "/tasks",
       body: { name: "New task" },
     });
-    expect(res.data).toEqual({ gid: "2" });
+    expect(JSON.parse(captured[0]!.init.body as string)).toEqual({
+      data: { name: "New task" },
+    });
+  });
+
+  it("includes query params in URL", async () => {
+    const captured: CapturedRequest[] = [];
+    const client = makeClient(fakeFetch({ data: [] }, 200, captured));
+    await client.request({
+      path: "/tasks",
+      query: { workspace: "123", completed_since: "now" },
+    });
+    const url = new URL(captured[0]!.url);
+    expect(url.searchParams.get("workspace")).toBe("123");
+    expect(url.searchParams.get("completed_since")).toBe("now");
+  });
+
+  it("omits undefined query params", async () => {
+    const captured: CapturedRequest[] = [];
+    const client = makeClient(fakeFetch({ data: [] }, 200, captured));
+    await client.request({
+      path: "/tasks",
+      query: { workspace: "123", assignee: undefined },
+    });
+    const url = new URL(captured[0]!.url);
+    expect(url.searchParams.has("workspace")).toBe(true);
+    expect(url.searchParams.has("assignee")).toBe(false);
+  });
+
+  it("includes opt_fields in URL", async () => {
+    const captured: CapturedRequest[] = [];
+    const client = makeClient(fakeFetch({ data: [] }, 200, captured));
+    await client.request({
+      path: "/tasks",
+      optFields: ["name", "completed"],
+    });
+    const url = new URL(captured[0]!.url);
+    expect(url.searchParams.get("opt_fields")).toBe("name,completed");
+  });
+
+  it("sends DELETE request", async () => {
+    const captured: CapturedRequest[] = [];
+    const client = makeClient(fakeFetch(undefined, 204, captured));
+    await client.request({ method: "DELETE", path: "/tasks/1" });
+    expect(captured[0]!.init.method).toBe("DELETE");
+  });
+
+  it("returns empty data for 204 No Content", async () => {
+    const client = makeClient(fakeFetch(undefined, 204));
+    const res = await client.request({ method: "DELETE", path: "/tasks/1" });
+    expect(res.data).toEqual({});
+  });
+
+  it("returns next_page when present in response", async () => {
+    const client = makeClient(
+      fakeFetch({
+        data: [{ gid: "1" }],
+        next_page: {
+          offset: "abc",
+          path: "/tasks?offset=abc",
+          uri: "https://example.com",
+        },
+      }),
+    );
+    const res = await client.request({ path: "/tasks" });
+    expect(res.next_page).toEqual({
+      offset: "abc",
+      path: "/tasks?offset=abc",
+      uri: "https://example.com",
+    });
   });
 
   it("throws AuthError on 401", async () => {
@@ -88,14 +185,5 @@ describe("AsanaClient", () => {
     await expect(client.request({ path: "/tasks/1" })).rejects.toThrow(
       TypeError,
     );
-  });
-
-  it("includes opt_fields in request", async () => {
-    const client = makeClient(fakeFetch({ data: [{ gid: "1" }] }));
-    const res = await client.request({
-      path: "/tasks",
-      optFields: ["name", "completed"],
-    });
-    expect(res.data).toEqual([{ gid: "1" }]);
   });
 });

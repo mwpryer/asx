@@ -1,12 +1,14 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   formatJSON,
-  logger,
+  hint,
   resolvePat,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   dryRunFlag,
@@ -17,7 +19,7 @@ import {
   type DryRunFlag,
   type FieldsFlag,
   type JsonFlag,
-} from "../../flags.js";
+} from "@/flags";
 
 export const completeCommand = buildCommand({
   docs: { brief: "Mark a task as complete" },
@@ -35,7 +37,7 @@ export const completeCommand = buildCommand({
       json: jsonFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag & FieldsFlag & DryRunFlag & JsonFlag,
     taskGid: string,
@@ -69,6 +71,6 @@ export const completeCommand = buildCommand({
     this.process.stdout.write(
       formatJSON({ task: res.data }, { command: "tasks.complete" }) + "\n",
     );
-    logger.hint(`Task ${taskGid} marked complete`);
-  },
+    hint(`Task ${taskGid} marked complete`);
+  }),
 });

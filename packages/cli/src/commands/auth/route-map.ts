@@ -1,8 +1,9 @@
 import { buildRouteMap } from "@stricli/core";
-import { addCommand } from "./add.js";
-import { listCommand } from "./list.js";
-import { removeCommand } from "./remove.js";
-import { statusCommand } from "./status.js";
+
+import { addCommand } from "@/commands/auth/add";
+import { listCommand } from "@/commands/auth/list";
+import { removeCommand } from "@/commands/auth/remove";
+import { statusCommand } from "@/commands/auth/status";
 
 export const authRouteMap = buildRouteMap({
   routes: {

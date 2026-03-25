@@ -1,5 +1,5 @@
-import { AuthError } from "../errors/errors.js";
-import { getAccount, loadAccounts } from "./token-store.js";
+import { AuthError } from "@/errors/errors";
+import { getAccount, loadAccounts } from "@/auth/token-store";
 
 export interface ResolvePatOpts {
   account?: string;

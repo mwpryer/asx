@@ -1,4 +1,5 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   InputError,
@@ -6,17 +7,18 @@ import {
   resolveAuth,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
-  DEFAULT_PAGE_LIMIT,
+  resolveLimit,
   fieldsFlag,
   paginationFlags,
   paginationMeta,
   type AccountFlag,
   type FieldsFlag,
   type PaginationFlags,
-} from "../../flags.js";
+} from "@/flags";
 
 export const listCommand = buildCommand({
   docs: { brief: "List projects in a workspace" },
@@ -30,6 +32,12 @@ export const listCommand = buildCommand({
         parse: String,
         optional: true,
       },
+      team: {
+        kind: "parsed",
+        brief: "Team GID (list projects for a specific team)",
+        parse: String,
+        optional: true,
+      },
       archived: {
         kind: "boolean",
         brief: "Include archived projects (default: false)",
@@ -39,34 +47,42 @@ export const listCommand = buildCommand({
       fields: fieldsFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag &
       FieldsFlag &
       PaginationFlags & {
         workspace: string | undefined;
+        team: string | undefined;
         archived: boolean;
       },
   ) {
-    if (flags.workspace) {
-      validateGid(flags.workspace, "workspace");
-    }
+    if (flags.workspace) validateGid(flags.workspace, "workspace");
+    if (flags.team) validateGid(flags.team, "team");
 
     const auth = resolveAuth({ account: flags.account });
-    const workspace = flags.workspace ?? auth.workspaceGid;
-    if (!workspace) {
-      throw new InputError(
-        "INPUT_MISSING",
-        "No workspace configured",
-        "Pass --workspace or set a default with `asx auth add <alias> --workspace <gid>`",
-      );
+
+    let path: string;
+    if (flags.team) {
+      path = `/teams/${flags.team}/projects`;
+    } else {
+      const workspace = flags.workspace ?? auth.workspaceGid;
+      if (!workspace) {
+        throw new InputError(
+          "INPUT_MISSING",
+          "No workspace configured",
+          "Pass --workspace, --team, or set a default with `asx auth add <alias> --workspace <gid>`",
+        );
+      }
+      path = `/workspaces/${workspace}/projects`;
     }
+
     const client = new AsanaClient({ pat: auth.pat });
     const res = await client.request({
-      path: `/workspaces/${workspace}/projects`,
+      path,
       query: {
         archived: flags.archived,
-        limit: flags.limit ?? DEFAULT_PAGE_LIMIT,
+        limit: resolveLimit(flags),
         ...(flags.offset && { offset: flags.offset }),
       },
       optFields: flags.fields?.split(",") ?? [
@@ -74,6 +90,9 @@ export const listCommand = buildCommand({
         "archived",
         "color",
         "owner.name",
+        "due_on",
+        "modified_at",
+        "team.name",
       ],
     });
 
@@ -83,5 +102,5 @@ export const listCommand = buildCommand({
         { command: "projects.list", pagination: paginationMeta(res) },
       ) + "\n",
     );
-  },
+  }),
 });

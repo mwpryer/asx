@@ -1,9 +1,9 @@
-import { InputError } from "../errors/errors.js";
+import { InputError } from "@/errors/errors";
 
-const GID_PATTERN = /^\d+$/;
+const GID_PATTERN = /^[1-9]\d*$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-// ASCII control characters except \n (0x0A) and \t (0x09)
-// eslint-disable-next-line no-control-regex
+// ASCII control characters except \t (0x09) and \n (0x0A)
+// oxlint-disable-next-line no-control-regex -- intentional: detecting unwanted control chars in input
 const CONTROL_CHAR_PATTERN = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
 
 const DEFAULT_MAX_LENGTH = 10_000;
@@ -45,12 +45,25 @@ export function validateDate(value: string, fieldName: string): string {
   return value;
 }
 
+export function validateLimit(value: number): number {
+  if (!Number.isInteger(value) || value < 1 || value > 100) {
+    throw new InputError(
+      "INPUT_INVALID",
+      `Invalid limit: ${value}`,
+      "limit must be an integer between 1 and 100",
+    );
+  }
+  return value;
+}
+
 export function sanitizeText(
   value: string,
   fieldName: string,
   maxLength: number = DEFAULT_MAX_LENGTH,
 ): string {
-  if (CONTROL_CHAR_PATTERN.test(value)) {
+  const cleaned = value.replace(/\r\n?/g, "\n").trim();
+
+  if (CONTROL_CHAR_PATTERN.test(cleaned)) {
     throw new InputError(
       "INPUT_INVALID",
       `Invalid ${fieldName}: contains disallowed control characters`,
@@ -58,13 +71,13 @@ export function sanitizeText(
     );
   }
 
-  if (value.length > maxLength) {
+  if (cleaned.length > maxLength) {
     throw new InputError(
       "INPUT_INVALID",
-      `Invalid ${fieldName}: text is ${value.length} characters, maximum is ${maxLength}`,
+      `Invalid ${fieldName}: text is ${cleaned.length} characters, maximum is ${maxLength}`,
       `${fieldName} must be at most ${maxLength} characters`,
     );
   }
 
-  return value;
+  return cleaned;
 }

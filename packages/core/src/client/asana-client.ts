@@ -1,5 +1,5 @@
-import { ApiError, AuthError } from "../errors/errors.js";
-import { retryAsync } from "./retry.js";
+import { ApiError, AuthError } from "@/errors/errors";
+import { retryAsync } from "@/client/retry";
 
 export interface AsanaClientOpts {
   pat: string;
@@ -68,25 +68,36 @@ export class AsanaClient {
       if (!res.ok) {
         const text = await res.text();
         let message = `Asana API ${method} ${opts.path}: ${res.status}`;
+        let help: string | undefined;
         try {
           const json = JSON.parse(text) as {
-            errors?: Array<{ message: string }>;
+            errors?: Array<{ message: string; help?: string }>;
           };
           if (json.errors?.[0]?.message) {
             message = json.errors[0].message;
+            help = json.errors[0].help;
           }
         } catch {
-          // use default message
+          // Use default message
         }
 
         if (res.status === 401 || res.status === 403) {
           throw new AuthError(
             "AUTH_REQUIRED",
             message,
-            "Check your PAT is valid",
+            help ?? "Check your PAT is valid",
           );
         }
-        throw new ApiError(message, res.status);
+
+        const retryAfter =
+          res.status === 429
+            ? Number(res.headers.get("Retry-After")) || undefined
+            : undefined;
+        throw new ApiError(message, res.status, help, retryAfter);
+      }
+
+      if (res.status === 204) {
+        return { data: {} as T };
       }
 
       return (await res.json()) as AsanaResponse<T>;

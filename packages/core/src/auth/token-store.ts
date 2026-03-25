@@ -1,6 +1,7 @@
-import fs from "fs";
-import { accountsPath, ensureConfigDir } from "../config/paths.js";
-import { AuthError } from "../errors/errors.js";
+import fs from "node:fs";
+
+import { AuthError } from "@/errors/errors";
+import { accountsPath, ensureConfigDir } from "@/config/paths";
 
 export interface StoredAccount {
   pat: string;

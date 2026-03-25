@@ -1,5 +1,4 @@
-export const EXIT_SUCCESS = 0;
-export const EXIT_GENERAL = 1;
+const EXIT_GENERAL = 1;
 export const EXIT_AUTH = 2;
 export const EXIT_INPUT = 3;
 export const EXIT_API = 4;
@@ -11,8 +10,7 @@ export type ErrorCode =
   | "API_RATE_LIMITED"
   | "API_ERROR"
   | "INPUT_INVALID"
-  | "INPUT_MISSING"
-  | "COMMAND_NOT_ALLOWED";
+  | "INPUT_MISSING";
 
 export class AsxError extends Error {
   constructor(
@@ -43,7 +41,13 @@ export class AuthError extends AsxError {
 
 export class ApiError extends AsxError {
   readonly status: number;
-  constructor(message: string, status: number, suggestion?: string) {
+  readonly retryAfter?: number;
+  constructor(
+    message: string,
+    status: number,
+    suggestion?: string,
+    retryAfter?: number,
+  ) {
     super(
       status === 404
         ? "API_NOT_FOUND"
@@ -55,12 +59,13 @@ export class ApiError extends AsxError {
       status === 429 ? EXIT_RATE_LIMITED : EXIT_API,
     );
     this.status = status;
+    this.retryAfter = retryAfter;
   }
 }
 
 export class InputError extends AsxError {
   constructor(
-    code: "INPUT_INVALID" | "INPUT_MISSING" | "COMMAND_NOT_ALLOWED",
+    code: "INPUT_INVALID" | "INPUT_MISSING",
     message: string,
     suggestion?: string,
   ) {

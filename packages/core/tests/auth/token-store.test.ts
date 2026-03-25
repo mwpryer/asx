@@ -1,14 +1,15 @@
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import fs from "fs";
-import path from "path";
-import os from "os";
+
 import {
   loadAccounts,
   saveAccounts,
   getAccount,
   setAccount,
   removeAccount,
-} from "../../src/auth/token-store.js";
+} from "@/auth/token-store";
 
 let tmpDir: string;
 
@@ -39,7 +40,7 @@ describe("loadAccounts", () => {
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(
       path.join(dir, "accounts.json"),
-      JSON.stringify({ work: { pat: "tok", added_at: "2024-01-01" } }),
+      JSON.stringify({ work: { pat: "tok", added_at: "2026-01-01" } }),
     );
     const accounts = loadAccounts();
     expect(accounts["work"]?.pat).toBe("tok");
@@ -48,9 +49,9 @@ describe("loadAccounts", () => {
 
 describe("setAccount / getAccount", () => {
   it("stores and retrieves an account", () => {
-    setAccount("test", { pat: "abc123", added_at: "2024-01-01" });
+    setAccount("test", { pat: "tok", added_at: "2026-01-01" });
     const account = getAccount("test");
-    expect(account?.pat).toBe("abc123");
+    expect(account?.pat).toBe("tok");
   });
 });
 
@@ -60,7 +61,7 @@ describe("removeAccount", () => {
   });
 
   it("removes an existing account", () => {
-    setAccount("rm-me", { pat: "x", added_at: "2024-01-01" });
+    setAccount("rm-me", { pat: "tok", added_at: "2026-01-01" });
     expect(removeAccount("rm-me")).toBe(true);
     expect(getAccount("rm-me")).toBeUndefined();
   });
@@ -69,8 +70,8 @@ describe("removeAccount", () => {
 describe("saveAccounts / loadAccounts round-trip", () => {
   it("persists to disk", () => {
     const data = {
-      a: { pat: "p1", added_at: "2024-01-01" },
-      b: { pat: "p2", name: "Bob", added_at: "2024-02-01" },
+      a: { pat: "tok-1", added_at: "2026-01-01" },
+      b: { pat: "tok-2", name: "John", added_at: "2026-02-01" },
     };
     saveAccounts(data);
     expect(loadAccounts()).toEqual(data);

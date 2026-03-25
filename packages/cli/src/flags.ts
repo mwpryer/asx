@@ -1,8 +1,8 @@
-import { InputError, type AsanaResponse } from "@mwp13/asx-core";
+import { InputError, validateLimit, type AsanaResponse } from "@mwp13/asx-core";
 
-export const DEFAULT_PAGE_LIMIT = 20;
+const DEFAULT_PAGE_LIMIT = 20;
 
-// Flag definitions (spread into parameters.flags)
+// Flag definitions
 export const accountFlag = {
   kind: "parsed",
   brief: "Account alias to use",
@@ -13,7 +13,7 @@ export const accountFlag = {
 export const paginationFlags = {
   limit: {
     kind: "parsed",
-    brief: "Max results to return",
+    brief: "Max results to return (1-100)",
     parse: Number,
     optional: true,
   },
@@ -45,7 +45,7 @@ export const jsonFlag = {
   optional: true,
 } as const;
 
-// Types (use in func signatures)
+// Types
 export type AccountFlag = { account: string | undefined };
 export type PaginationFlags = {
   limit: number | undefined;
@@ -54,6 +54,11 @@ export type PaginationFlags = {
 export type FieldsFlag = { fields: string | undefined };
 export type DryRunFlag = { dryRun: boolean };
 export type JsonFlag = { json: string | undefined };
+
+export function resolveLimit(flags: PaginationFlags): number {
+  if (flags.limit === undefined) return DEFAULT_PAGE_LIMIT;
+  return validateLimit(flags.limit);
+}
 
 export function paginationMeta(res: AsanaResponse<unknown>) {
   return res.next_page ? { next_offset: res.next_page.offset } : undefined;

@@ -1,14 +1,16 @@
 import { buildCommand } from "@stricli/core";
+
 import {
   AsanaClient,
   InputError,
   formatJSON,
-  logger,
+  hint,
   resolvePat,
   sanitizeText,
   validateGid,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   dryRunFlag,
@@ -19,7 +21,7 @@ import {
   type DryRunFlag,
   type FieldsFlag,
   type JsonFlag,
-} from "../../flags.js";
+} from "@/flags";
 
 export const commentCommand = buildCommand({
   docs: { brief: "Add a comment to a task" },
@@ -28,29 +30,36 @@ export const commentCommand = buildCommand({
       kind: "tuple",
       parameters: [
         { brief: "Task GID", placeholder: "task-gid", parse: String },
-        { brief: "Comment text", placeholder: "text", parse: String },
       ],
     },
     flags: {
+      text: {
+        kind: "parsed",
+        brief: "Comment text",
+        parse: String,
+        optional: true,
+      },
       account: accountFlag,
       fields: fieldsFlag,
       dryRun: dryRunFlag,
       json: jsonFlag,
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
-    flags: AccountFlag & FieldsFlag & DryRunFlag & JsonFlag,
+    flags: AccountFlag &
+      FieldsFlag &
+      DryRunFlag &
+      JsonFlag & { text: string | undefined },
     taskGid: string,
-    text: string,
   ) {
     validateGid(taskGid, "task-gid");
 
-    if (flags.json && text) {
+    if (flags.json && flags.text) {
       throw new InputError(
         "INPUT_INVALID",
-        "--json is mutually exclusive with the text positional argument",
-        "Use either --json or the text argument, not both",
+        "--json is mutually exclusive with --text",
+        "Use either --json or --text, not both",
       );
     }
 
@@ -59,7 +68,21 @@ export const commentCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      sanitizeText(text, "text");
+      if (!flags.text) {
+        throw new InputError(
+          "INPUT_MISSING",
+          "--text is required when not using --json",
+          "Provide --text or use --json with a JSON object",
+        );
+      }
+      const text = sanitizeText(flags.text, "text");
+      if (!text) {
+        throw new InputError(
+          "INPUT_INVALID",
+          "Invalid text: must not be blank",
+          "Provide non-empty --text",
+        );
+      }
       body = { text };
     }
 
@@ -82,6 +105,7 @@ export const commentCommand = buildCommand({
       path,
       body,
       optFields: flags.fields?.split(",") ?? [
+        "gid",
         "text",
         "created_by.name",
         "created_at",
@@ -90,6 +114,6 @@ export const commentCommand = buildCommand({
     this.process.stdout.write(
       formatJSON({ story: res.data }, { command: "tasks.comment" }) + "\n",
     );
-    logger.hint(`Comment added to task ${taskGid}`);
-  },
+    hint(`Comment added to task ${taskGid}`);
+  }),
 });

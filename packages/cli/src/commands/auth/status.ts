@@ -1,7 +1,9 @@
 import { buildCommand } from "@stricli/core";
+
 import { AsanaClient, formatJSON, resolvePat } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
-import { accountFlag, type AccountFlag } from "../../flags.js";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
+import { accountFlag, type AccountFlag } from "@/flags";
 
 export const statusCommand = buildCommand({
   docs: { brief: "Check authentication status (calls /users/me)" },
@@ -11,7 +13,7 @@ export const statusCommand = buildCommand({
       account: accountFlag,
     },
   },
-  func: async function (this: AsxCliContext, flags: AccountFlag) {
+  func: asxFunc(async function (this: AsxCliContext, flags: AccountFlag) {
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
     const res = await client.request<{
@@ -27,5 +29,5 @@ export const statusCommand = buildCommand({
     this.process.stdout.write(
       formatJSON({ user: res.data }, { command: "auth.status" }) + "\n",
     );
-  },
+  }),
 });

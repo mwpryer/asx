@@ -1,6 +1,8 @@
 import { buildCommand } from "@stricli/core";
-import { AsanaClient, logger, setAccount } from "@mwp13/asx-core";
-import type { AsxCliContext } from "../../context.js";
+
+import { AsanaClient, hint, setAccount } from "@mwp13/asx-core";
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
 
 export const addCommand = buildCommand({
   docs: { brief: "Add an Asana account with a Personal Access Token" },
@@ -31,7 +33,7 @@ export const addCommand = buildCommand({
       },
     },
   },
-  func: async function (
+  func: asxFunc(async function (
     this: AsxCliContext,
     flags: { pat: string; workspace: string | undefined },
     alias: string,
@@ -52,11 +54,11 @@ export const addCommand = buildCommand({
 
     if (!workspaceGid && workspaces.length === 1) {
       workspaceGid = workspaces[0]!.gid;
-      logger.hint(
+      hint(
         `Auto-selected workspace "${workspaces[0]!.name}" (${workspaceGid})`,
       );
     } else if (!workspaceGid && workspaces.length > 1) {
-      logger.hint(
+      hint(
         `Multiple workspaces found. Use --workspace <gid> to set a default. Available: ${workspaces.map((w) => `${w.name} (${w.gid})`).join(", ")}`,
       );
     }
@@ -68,8 +70,6 @@ export const addCommand = buildCommand({
       added_at: new Date().toISOString(),
     });
 
-    logger.hint(
-      `Account "${alias}" added (${res.data.name}, ${res.data.email})`,
-    );
-  },
+    hint(`Account "${alias}" added (${res.data.name}, ${res.data.email})`);
+  }),
 });
