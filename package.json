@@ -1,6 +1,12 @@
 {
   "name": "asx",
   "private": true,
+  "license": "MIT",
+  "author": "mwpryer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mwpryer/asx.git"
+  },
   "scripts": {
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
@@ -8,10 +14,13 @@
     "dev": "turbo run dev",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "format": "oxfmt --check",
-    "format:fix": "oxfmt"
+    "fmt": "oxfmt --check",
+    "fmt:fix": "oxfmt",
+    "format": "npm run lint:fix && npm run fmt:fix",
+    "publish-packages": "turbo run build lint test && changeset version && changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.0",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
     "turbo": "^2.8.11",

@@ -5,6 +5,7 @@ import {
   InputError,
   formatJSON,
   resolveAuth,
+  resolvePat,
   sanitizeText,
   validateDate,
   validateGid,
@@ -108,8 +109,6 @@ export const createCommand = buildCommand({
       );
     }
 
-    const auth = resolveAuth({ account: flags.account });
-
     let body: Record<string, unknown>;
 
     if (flags.json) {
@@ -145,14 +144,17 @@ export const createCommand = buildCommand({
         body["parent"] = flags.parent;
       } else if (flags.project) {
         body["projects"] = [flags.project];
-      } else if (auth.workspaceGid) {
-        body["workspace"] = auth.workspaceGid;
-      } else {
-        throw new InputError(
-          "INPUT_MISSING",
-          "--project or --parent is required when no default workspace is configured",
-          "Pass --project, --parent, or set a default workspace with `asx auth add <alias> --workspace <gid>`",
-        );
+      } else if (!flags.dryRun) {
+        const auth = resolveAuth({ account: flags.account });
+        if (auth.workspaceGid) {
+          body["workspace"] = auth.workspaceGid;
+        } else {
+          throw new InputError(
+            "INPUT_MISSING",
+            "--project or --parent is required when no default workspace is configured",
+            "Pass --project, --parent, or set a default workspace with `asx auth add <alias> --workspace <gid>`",
+          );
+        }
       }
       if (flags.assignee) body["assignee"] = flags.assignee;
       if (flags.due) body["due_on"] = flags.due;
@@ -170,7 +172,8 @@ export const createCommand = buildCommand({
       return;
     }
 
-    const client = new AsanaClient({ pat: auth.pat });
+    const pat = resolvePat({ account: flags.account });
+    const client = new AsanaClient({ pat });
     const res = await client.request({
       method: "POST",
       path: "/tasks",

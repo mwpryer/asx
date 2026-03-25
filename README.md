@@ -1,12 +1,10 @@
 <h1 align="center">asx</h1>
 
-**Asana from the command line, built for humans and AI agents.**<br>
-Tasks, projects, workspaces, and comments. Zero boilerplate. Structured JSON output.
+**A fast Asana CLI with first-class AI agent support.**<br>
+Structured JSON output, schema introspection, dry-run mode, and field selection.
 
 <p>
   <a href="https://www.npmjs.com/package/@mwp13/asx"><img src="https://img.shields.io/npm/v/@mwp13/asx" alt="npm version"></a>
-  <a href="https://github.com/mwpryer/asx/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mwpryer/asx" alt="licence"></a>
-  <a href="https://github.com/mwpryer/asx/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/mwpryer/asx/ci.yml?branch=main&label=CI" alt="CI status"></a>
 </p>
 <br>
 
@@ -27,7 +25,6 @@ npm install -g @mwp13/asx
 - [Output Format](#output-format)
 - [Agent Features](#agent-features)
 - [Agent Skill](#agent-skill)
-- [Packages](#packages)
 
 ## Prerequisites
 
@@ -49,8 +46,8 @@ pnpm add -g @mwp13/asx
 ## Quick Start
 
 ```bash
-asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2...           # store a PAT
-asx workspaces list                              # list your workspaces
+asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2... # store a PAT
+asx workspaces list # list your workspaces
 asx tasks search "launch prep" --workspace 1209876543210987
 asx tasks create --name "Write docs" --project 1201234567890123 --due 2026-01-01
 ```
@@ -62,11 +59,11 @@ asx uses Asana Personal Access Tokens (PATs). Store them with `asx auth add`.
 ### Storing accounts
 
 ```bash
-asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2...                                  # add an account
-asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2... --workspace 1209876543210987    # with default workspace (auto-used when --workspace is omitted)
-asx auth list                                       # list stored accounts
-asx auth status                                     # show current user info
-asx auth remove work                                # remove an account
+asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2... # add an account
+asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2... --workspace 1209876543210987 # with default workspace
+asx auth list # list stored accounts
+asx auth status # show current user info
+asx auth remove work # remove an account
 ```
 
 Accounts are stored in `~/.config/asx/accounts.json` (respects `XDG_CONFIG_HOME`; Windows: `%LOCALAPPDATA%\asx\`) with file permissions `0600`.
@@ -106,14 +103,9 @@ These flags appear on multiple commands:
 | `asx describe <resource>` | Show available fields for a resource type |
 
 ```bash
-# List everything
-asx describe
-
-# Inspect a command's flags and args
-asx describe tasks.create
-
-# Discover available fields for a resource type
-asx describe task
+asx describe # list all commands and resource types
+asx describe tasks.create # show flags, args, and types for a command
+asx describe task # show available fields for a resource type
 ```
 
 ### `asx auth` - Manage authentication and accounts
@@ -152,21 +144,12 @@ asx auth status --account work
 | `asx tasks remove-tag <gid> --tag <id>`         | Remove a tag from a task           |
 
 ```bash
-# Search with filters
-asx tasks search "bug" --workspace 1209876543210987 --assignee me --project 1201234567890123
-
-# List tasks in a project
-asx tasks list --project 1201234567890123
-
-# Create a task
+asx tasks search "bug" --workspace 1209876543210987 --assignee me --project 1201234567890123 # search with filters
+asx tasks list --project 1201234567890123 # list tasks in a project
 asx tasks create --name "Fix login" --project 1201234567890123 --assignee me --due 2026-03-15 --notes "See ticket #42"
-
-# Update and complete
 asx tasks update 1205678901234567 --name "Fix login flow" --due 2026-03-20
 asx tasks complete 1205678901234567
 asx tasks comment 1205678901234567 --text "Done, deployed to staging"
-
-# Organise
 asx tasks add-project 1205678901234567 --project 1201234567890456 --section 1203456789012345
 asx tasks add-tag 1205678901234567 --tag 1207890123456789
 ```
@@ -344,7 +327,7 @@ asx is designed for AI agent use. These features help agents interact safely and
 GIDs, dates, and text are validated before any API call. Invalid input returns `INPUT_INVALID` (exit 3) with a `suggestion` field — no wasted API calls.
 
 ```bash
-asx tasks get abc    # exit 3: "Invalid GID: must be numeric"
+asx tasks get abc # exit 3: "Invalid GID: must be numeric"
 ```
 
 ### Field selection (`--fields`)
@@ -379,9 +362,9 @@ asx tasks create --json '{"name":"Deploy v2","custom_fields":{"1208901234567890"
 Discover commands, flags, and fields at runtime — no docs needed.
 
 ```bash
-asx describe                # list all commands and resource types
-asx describe tasks.create   # show flags, args, and types for a command
-asx describe task           # show available fields for a resource type
+asx describe # list all commands and resource types
+asx describe tasks.create # show flags, args, and types for a command
+asx describe task # show available fields for a resource type
 ```
 
 ## Agent Skill
@@ -391,15 +374,6 @@ asx ships with an [agent skill](https://skills.sh) (`skills/asx/SKILL.md`) that 
 ```bash
 npx skills add mwpryer/asx
 ```
-
-## Packages
-
-asx is a monorepo with two packages:
-
-| Package         | npm                                                                | Description                               |
-| --------------- | ------------------------------------------------------------------ | ----------------------------------------- |
-| `packages/core` | [`@mwp13/asx-core`](https://www.npmjs.com/package/@mwp13/asx-core) | Asana client, auth, errors, output, types |
-| `packages/cli`  | [`@mwp13/asx`](https://www.npmjs.com/package/@mwp13/asx)           | CLI binary (`asx`)                        |
 
 ## Licence
 

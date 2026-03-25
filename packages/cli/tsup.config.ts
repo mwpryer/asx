@@ -8,6 +8,7 @@ export default defineConfig({
   format: ["esm"],
   splitting: true,
   clean: true,
+  noExternal: ["@mwp13/asx-core", "@stricli/core"],
   banner: {
     js: "#!/usr/bin/env node",
   },

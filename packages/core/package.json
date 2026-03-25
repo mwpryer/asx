@@ -1,6 +1,15 @@
 {
   "name": "@mwp13/asx-core",
-  "version": "0.0.0",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Asana client, auth, errors, output, and types for asx",
+  "license": "MIT",
+  "author": "mwpryer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mwpryer/asx.git",
+    "directory": "packages/core"
+  },
   "files": [
     "dist"
   ],
@@ -17,6 +26,7 @@
     "access": "public"
   },
   "scripts": {
+    "prepublishOnly": "tsup",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
