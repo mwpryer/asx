@@ -1,6 +1,6 @@
+import { AsanaClient, formatJSON, resolvePat } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 
-import { AsanaClient, formatJSON, resolvePat } from "@mwp13/asx-core";
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
 import { accountFlag, type AccountFlag } from "@/flags";

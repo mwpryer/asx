@@ -1,11 +1,11 @@
-import { buildCommand } from "@stricli/core";
-
 import {
   AsanaClient,
   formatJSON,
   resolvePat,
   validateGid,
 } from "@mwp13/asx-core";
+import { buildCommand } from "@stricli/core";
+
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
@@ -19,8 +19,8 @@ import {
   type PaginationFlags,
 } from "@/flags";
 
-export const membershipsCommand = buildCommand({
-  docs: { brief: "List memberships of a project" },
+export const listCommand = buildCommand({
+  docs: { brief: "List status updates for a project" },
   parameters: {
     positional: {
       kind: "tuple",
@@ -44,22 +44,27 @@ export const membershipsCommand = buildCommand({
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
     const res = await client.request({
-      path: `/projects/${projectGid}/project_memberships`,
+      path: `/projects/${projectGid}/project_statuses`,
       query: {
         limit: resolveLimit(flags),
         ...(flags.offset && { offset: flags.offset }),
       },
       optFields: flags.fields?.split(",") ?? [
-        "user.name",
-        "user.email",
-        "access_level",
+        "title",
+        "color",
+        "text",
+        "created_by.name",
+        "created_at",
       ],
     });
 
     this.process.stdout.write(
       formatJSON(
-        { memberships: res.data },
-        { command: "projects.memberships", pagination: paginationMeta(res) },
+        { statuses: res.data },
+        {
+          command: "projects.statuses.list",
+          pagination: paginationMeta(res),
+        },
       ) + "\n",
     );
   }),

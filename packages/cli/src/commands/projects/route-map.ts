@@ -5,9 +5,8 @@ import { deleteCommand } from "@/commands/projects/delete";
 import { duplicateCommand } from "@/commands/projects/duplicate";
 import { getCommand } from "@/commands/projects/get";
 import { listCommand } from "@/commands/projects/list";
-import { membershipsCommand } from "@/commands/projects/memberships";
-import { sectionsCommand } from "@/commands/projects/sections";
-import { statusesCommand } from "@/commands/projects/statuses";
+import { membershipsRouteMap } from "@/commands/projects/memberships/route-map";
+import { statusesRouteMap } from "@/commands/projects/statuses/route-map";
 import { taskCountsCommand } from "@/commands/projects/task-counts";
 import { updateCommand } from "@/commands/projects/update";
 
@@ -19,9 +18,8 @@ export const projectsRouteMap = buildRouteMap({
     update: updateCommand,
     delete: deleteCommand,
     duplicate: duplicateCommand,
-    sections: sectionsCommand,
-    statuses: statusesCommand,
-    memberships: membershipsCommand,
+    statuses: statusesRouteMap,
+    memberships: membershipsRouteMap,
     "task-counts": taskCountsCommand,
   },
   docs: { brief: "Manage Asana projects" },

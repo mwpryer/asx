@@ -23,6 +23,10 @@ const { getCommand: customFieldsGetCommand } =
   await import("@/commands/custom-fields/get");
 const { listCommand: customFieldsListCommand } =
   await import("@/commands/custom-fields/list");
+const { getCommand: tagsGetCommand } = await import("@/commands/tags/get");
+const { getCommand: sectionsGetCommand } =
+  await import("@/commands/sections/get");
+const { getCommand: teamsGetCommand } = await import("@/commands/teams/get");
 
 beforeEach(() => {
   mockRequest.mockReset();
@@ -229,6 +233,115 @@ describe("custom-fields list", () => {
       limit: undefined,
       offset: undefined,
     });
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+});
+
+describe("tags get", () => {
+  it("rejects non-numeric GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(tagsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "abc");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects empty GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(tagsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects GID starting with zero", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(tagsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "0123");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+});
+
+describe("sections get", () => {
+  it("rejects non-numeric GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(sectionsGetCommand);
+    await func.call(
+      ctx,
+      { account: undefined, fields: undefined },
+      "not-a-gid",
+    );
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects empty GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(sectionsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects GID starting with zero", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(sectionsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "0123");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+});
+
+describe("teams get", () => {
+  it("rejects non-numeric GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(teamsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "abc");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects empty GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(teamsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects GID starting with zero", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(teamsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "0123");
     const out = parseOutput(ctx);
     expect(out["error"]).toBeDefined();
     expect((out["error"] as Record<string, unknown>)["code"]).toBe(

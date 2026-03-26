@@ -1,5 +1,3 @@
-import { buildCommand } from "@stricli/core";
-
 import {
   AsanaClient,
   InputError,
@@ -9,6 +7,8 @@ import {
   sanitizeText,
   validateGid,
 } from "@mwp13/asx-core";
+import { buildCommand } from "@stricli/core";
+
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {

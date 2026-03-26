@@ -1,5 +1,3 @@
-import { describe, it, expect } from "vitest";
-
 import {
   TASK_FIELDS,
   PROJECT_FIELDS,
@@ -7,7 +5,11 @@ import {
   SECTION_FIELDS,
   USER_FIELDS,
   CUSTOM_FIELD_FIELDS,
+  TAG_FIELDS,
+  TEAM_FIELDS,
 } from "@mwp13/asx-core";
+import { describe, it, expect } from "vitest";
+
 import { describeCommand } from "@/commands/describe/describe";
 import { COMMAND_SCHEMAS } from "@/commands/describe/schemas";
 import { createMockContext, loadCommand, parseOutput } from "./helpers";
@@ -18,20 +20,36 @@ describe("COMMAND_SCHEMAS completeness", () => {
     "auth.list",
     "auth.remove",
     "auth.status",
+    "custom-fields.create",
+    "custom-fields.delete",
     "custom-fields.get",
     "custom-fields.list",
+    "custom-fields.update",
     "projects.create",
     "projects.delete",
     "projects.duplicate",
     "projects.get",
     "projects.list",
-    "projects.memberships",
-    "projects.sections",
-    "projects.statuses",
+    "projects.memberships.add",
+    "projects.memberships.list",
+    "projects.memberships.remove",
+    "projects.statuses.create",
+    "projects.statuses.list",
     "projects.task-counts",
     "projects.update",
+    "sections.create",
+    "sections.delete",
+    "sections.get",
+    "sections.list",
+    "sections.update",
+    "tags.create",
+    "tags.delete",
+    "tags.get",
+    "tags.list",
+    "tags.update",
     "tasks.comments.add",
     "tasks.comments.list",
+    "tasks.comments.remove",
     "tasks.complete",
     "tasks.create",
     "tasks.delete",
@@ -49,11 +67,14 @@ describe("COMMAND_SCHEMAS completeness", () => {
     "tasks.projects.remove",
     "tasks.search",
     "tasks.stories.list",
-    "tasks.subtasks",
+    "tasks.subtasks.create",
+    "tasks.subtasks.list",
     "tasks.tags.add",
     "tasks.tags.list",
     "tasks.tags.remove",
     "tasks.update",
+    "teams.get",
+    "teams.list",
     "users.get",
     "users.list",
     "workspaces.get",
@@ -84,6 +105,8 @@ describe("field registries", () => {
     section: SECTION_FIELDS,
     user: USER_FIELDS,
     custom_field: CUSTOM_FIELD_FIELDS,
+    tag: TAG_FIELDS,
+    team: TEAM_FIELDS,
   };
 
   for (const [resource, fields] of Object.entries(resourceFields)) {

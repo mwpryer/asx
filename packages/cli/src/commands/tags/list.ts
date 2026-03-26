@@ -1,0 +1,74 @@
+import {
+  AsanaClient,
+  InputError,
+  formatJSON,
+  resolveAuth,
+} from "@mwp13/asx-core";
+import { buildCommand } from "@stricli/core";
+
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
+import {
+  accountFlag,
+  resolveLimit,
+  fieldsFlag,
+  paginationFlags,
+  paginationMeta,
+  type AccountFlag,
+  type FieldsFlag,
+  type PaginationFlags,
+} from "@/flags";
+
+export const listCommand = buildCommand({
+  docs: { brief: "List tags in a workspace" },
+  parameters: {
+    positional: { kind: "tuple", parameters: [] },
+    flags: {
+      ...paginationFlags,
+      workspace: {
+        kind: "parsed",
+        brief: "Workspace GID (defaults to stored account workspace)",
+        parse: String,
+        optional: true,
+      },
+      account: accountFlag,
+      fields: fieldsFlag,
+    },
+  },
+  func: asxFunc(async function (
+    this: AsxCliContext,
+    flags: AccountFlag &
+      FieldsFlag &
+      PaginationFlags & {
+        workspace: string | undefined;
+      },
+  ) {
+    const auth = resolveAuth({ account: flags.account });
+    const workspace = flags.workspace ?? auth.workspaceGid;
+
+    if (!workspace) {
+      throw new InputError(
+        "INPUT_MISSING",
+        "No workspace configured",
+        "Pass --workspace or set a default with `asx auth add <alias> --workspace <gid>`",
+      );
+    }
+
+    const client = new AsanaClient({ pat: auth.pat });
+    const res = await client.request({
+      path: `/workspaces/${workspace}/tags`,
+      query: {
+        limit: resolveLimit(flags),
+        ...(flags.offset && { offset: flags.offset }),
+      },
+      optFields: flags.fields?.split(",") ?? ["name", "color"],
+    });
+
+    this.process.stdout.write(
+      formatJSON(
+        { tags: res.data },
+        { command: "tags.list", pagination: paginationMeta(res) },
+      ) + "\n",
+    );
+  }),
+});

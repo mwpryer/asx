@@ -1,5 +1,3 @@
-import { buildCommand } from "@stricli/core";
-
 import {
   formatJSON,
   TASK_FIELDS,
@@ -8,9 +6,13 @@ import {
   SECTION_FIELDS,
   USER_FIELDS,
   CUSTOM_FIELD_FIELDS,
+  TAG_FIELDS,
+  TEAM_FIELDS,
 } from "@mwp13/asx-core";
-import type { AsxCliContext } from "@/context";
+import { buildCommand } from "@stricli/core";
+
 import { COMMAND_SCHEMAS } from "@/commands/describe/schemas";
+import type { AsxCliContext } from "@/context";
 
 const RESOURCE_FIELDS: Record<string, readonly string[]> = {
   task: TASK_FIELDS,
@@ -19,6 +21,8 @@ const RESOURCE_FIELDS: Record<string, readonly string[]> = {
   section: SECTION_FIELDS,
   user: USER_FIELDS,
   custom_field: CUSTOM_FIELD_FIELDS,
+  tag: TAG_FIELDS,
+  team: TEAM_FIELDS,
 };
 
 export const describeCommand = buildCommand({

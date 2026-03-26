@@ -28,7 +28,10 @@ npm install -g @mwp13/asx
   - [projects](#asx-projects---manage-asana-projects)
   - [workspaces](#asx-workspaces---manage-asana-workspaces)
   - [users](#asx-users---manage-asana-users)
-  - [custom-fields](#asx-custom-fields---inspect-asana-custom-field-definitions)
+  - [custom-fields](#asx-custom-fields---manage-asana-custom-field-definitions)
+  - [tags](#asx-tags---manage-asana-tags)
+  - [sections](#asx-sections---manage-asana-sections)
+  - [teams](#asx-teams---manage-asana-teams)
 - [Output Format](#output-format)
 - [Agent Features](#agent-features)
 - [Agent Skill](#agent-skill)
@@ -141,9 +144,11 @@ asx auth status --account work
 | `asx tasks complete <gid>`                      | Mark a task as completed           |
 | `asx tasks delete <gid>`                        | Delete a task                      |
 | `asx tasks duplicate <gid> --name <name>`       | Duplicate a task                   |
-| `asx tasks subtasks <gid>`                      | List subtasks of a task            |
+| `asx tasks subtasks [list] <gid>`               | List subtasks of a task            |
+| `asx tasks subtasks create <gid> --name <name>` | Create a subtask                   |
 | `asx tasks comments [list] <gid>`               | List comments on a task            |
 | `asx tasks comments add <gid> --text <text>`    | Add a comment to a task            |
+| `asx tasks comments remove <story-gid>`         | Remove a comment                   |
 | `asx tasks stories [list] <gid>`                | List all stories on a task         |
 | `asx tasks dependencies [list] <gid>`           | List task dependencies             |
 | `asx tasks dependencies add <gid> <dep-gid>`    | Add a dependency                   |
@@ -227,18 +232,20 @@ asx tasks tags add 1205678901234567 1207890123456789
 
 ### `asx projects` - Manage Asana projects
 
-| Command                                      | Description                   |
-| -------------------------------------------- | ----------------------------- |
-| `asx projects list`                          | List projects in a workspace  |
-| `asx projects get <gid>`                     | Get project details           |
-| `asx projects create --name <name>`          | Create a new project          |
-| `asx projects update <gid>`                  | Update a project              |
-| `asx projects delete <gid>`                  | Delete a project              |
-| `asx projects duplicate <gid> --name <name>` | Duplicate a project           |
-| `asx projects sections <gid>`                | List sections in a project    |
-| `asx projects statuses <gid>`                | List status updates           |
-| `asx projects memberships <gid>`             | List project memberships      |
-| `asx projects task-counts <gid>`             | Get task counts for a project |
+| Command                                            | Description                    |
+| -------------------------------------------------- | ------------------------------ |
+| `asx projects list`                                | List projects in a workspace   |
+| `asx projects get <gid>`                           | Get project details            |
+| `asx projects create --name <name>`                | Create a new project           |
+| `asx projects update <gid>`                        | Update a project               |
+| `asx projects delete <gid>`                        | Delete a project               |
+| `asx projects duplicate <gid> --name <name>`       | Duplicate a project            |
+| `asx projects statuses [list] <gid>`               | List status updates            |
+| `asx projects statuses create <gid>`               | Create a project status update |
+| `asx projects memberships [list] <gid>`            | List project memberships       |
+| `asx projects memberships add <gid> <user-gid>`    | Add a member to a project      |
+| `asx projects memberships remove <gid> <user-gid>` | Remove a member from a project |
+| `asx projects task-counts <gid>`                   | Get task counts for a project  |
 
 ```bash
 asx projects list --workspace 1209876543210987
@@ -246,7 +253,6 @@ asx projects list --workspace 1209876543210987 --team 1204567890123456 --archive
 asx projects get 1201234567890123
 asx projects create --name "Q2 Launch" --workspace 1209876543210987 --team 1204567890123456
 asx projects update 1201234567890123 --name "Q2 Launch (v2)" --color "light-green"
-asx projects sections 1201234567890123
 ```
 
 #### projects list flags
@@ -301,17 +307,23 @@ asx users list --workspace 1209876543210987
 asx users get 1206789012345678
 ```
 
-### `asx custom-fields` - Inspect Asana custom field definitions
+### `asx custom-fields` - Manage Asana custom field definitions
 
-| Command                       | Description                         |
-| ----------------------------- | ----------------------------------- |
-| `asx custom-fields list`      | List custom fields in a workspace   |
-| `asx custom-fields get <gid>` | Get custom field definition details |
+| Command                          | Description                         |
+| -------------------------------- | ----------------------------------- |
+| `asx custom-fields list`         | List custom fields in a workspace   |
+| `asx custom-fields get <gid>`    | Get custom field definition details |
+| `asx custom-fields create`       | Create a custom field definition    |
+| `asx custom-fields update <gid>` | Update a custom field definition    |
+| `asx custom-fields delete <gid>` | Delete a custom field definition    |
 
 ```bash
 asx custom-fields list --workspace 1209876543210987
 asx custom-fields get 1208901234567890
 asx custom-fields get 1208901234567890 --fields name,resource_subtype,enum_options.name
+asx custom-fields create --name "Priority" --resource-subtype enum
+asx custom-fields update 1208901234567890 --name "Renamed Field"
+asx custom-fields delete 1208901234567890
 ```
 
 Use `asx describe custom_field` to see all available fields. Custom field GIDs from `list` can be used with `--json` on task create/update to set values:
@@ -320,8 +332,81 @@ Use `asx describe custom_field` to see all available fields. Custom field GIDs f
 asx tasks create --json '{"name":"Deploy v2","projects":["123"],"custom_fields":{"1208901234567890":"high"}}'
 ```
 
-- `custom-fields list` requires a workspace (stored or `--workspace`).
+- `custom-fields list` and `create` require a workspace (stored or `--workspace`).
 - This is a premium Asana feature; free workspaces may return empty results.
+
+### `asx tags` - Manage Asana tags
+
+| Command                         | Description      |
+| ------------------------------- | ---------------- |
+| `asx tags list`                 | List tags        |
+| `asx tags get <gid>`            | Get tag details  |
+| `asx tags create --name <name>` | Create a new tag |
+| `asx tags update <gid>`         | Update a tag     |
+| `asx tags delete <gid>`         | Delete a tag     |
+
+```bash
+asx tags list --workspace 1209876543210987
+asx tags get 1207890123456789
+asx tags create --name "Bug" --color "light-red" --workspace 1209876543210987
+asx tags update 1207890123456789 --name "Critical Bug" --color "dark-red"
+asx tags delete 1207890123456789
+```
+
+#### tags list flags
+
+| Flag                | Required | Description                                          |
+| ------------------- | -------- | ---------------------------------------------------- |
+| `--workspace <gid>` | No       | Workspace GID (defaults to stored account workspace) |
+| `--limit <n>`       | No       | Max results to return (1-100)                        |
+| `--offset <token>`  | No       | Pagination offset from a previous response           |
+| `--fields <fields>` | No       | Comma-separated fields to return                     |
+| `--account <alias>` | No       | Account to use                                       |
+
+#### tags create flags
+
+| Flag                | Required | Description                                          |
+| ------------------- | -------- | ---------------------------------------------------- |
+| `--name <text>`     | Yes      | Tag name                                             |
+| `--color <colour>`  | No       | Tag colour                                           |
+| `--notes <text>`    | No       | Tag description                                      |
+| `--workspace <gid>` | No       | Workspace GID (defaults to stored account workspace) |
+| `--json <json>`     | No       | Raw JSON body (mutually exclusive with value flags)  |
+| `--dry-run`         | No       | Preview request without sending                      |
+| `--account <alias>` | No       | Account to use                                       |
+
+### `asx sections` - Manage Asana sections
+
+| Command                             | Description          |
+| ----------------------------------- | -------------------- |
+| `asx sections list --project <gid>` | List sections        |
+| `asx sections get <gid>`            | Get section details  |
+| `asx sections create --name <name>` | Create a new section |
+| `asx sections update <gid>`         | Update a section     |
+| `asx sections delete <gid>`         | Delete a section     |
+
+```bash
+asx sections list --project 1201234567890123
+asx sections get 1203456789012345
+asx sections create --name "Backlog" --project 1201234567890123
+asx sections update 1203456789012345 --name "Done"
+asx sections delete 1203456789012345
+```
+
+`--project` is required for `list` and `create` (when not using `--json`).
+
+### `asx teams` - Manage Asana teams
+
+| Command               | Description                   |
+| --------------------- | ----------------------------- |
+| `asx teams list`      | List teams in an organisation |
+| `asx teams get <gid>` | Get team details              |
+
+```bash
+asx teams list --workspace 1209876543210987
+asx teams get 1204567890123456
+asx teams get 1204567890123456 --fields name,description,permalink_url
+```
 
 ## Output Format
 

@@ -41,4 +41,6 @@ export {
   SECTION_FIELDS,
   USER_FIELDS,
   CUSTOM_FIELD_FIELDS,
+  TAG_FIELDS,
+  TEAM_FIELDS,
 } from "@/types/fields";

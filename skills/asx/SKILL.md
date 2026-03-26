@@ -1,6 +1,6 @@
 ---
 name: asx
-description: Drive the asx Asana CLI to manage tasks, projects, workspaces, users, custom fields, and authentication. Use when the user asks about Asana tasks, projects, custom fields, or account setup.
+description: Drive the asx Asana CLI to manage tasks, projects, tags, sections, teams, workspaces, users, custom fields, and authentication. Use when the user asks about Asana tasks, projects, tags, sections, teams, custom fields, or account setup.
 compatibility: Requires asx CLI (npm i -g @mwp13/asx)
 metadata:
   version: "0.2.0"
@@ -52,9 +52,11 @@ asx tasks search "bug" --account work
 | `asx tasks complete <gid>`                      | Mark a task complete               | Yes      |
 | `asx tasks delete <gid>`                        | Delete a task                      | Yes      |
 | `asx tasks duplicate <gid>`                     | Duplicate a task                   | Yes      |
-| `asx tasks subtasks <gid>`                      | List subtasks of a task            | No       |
+| `asx tasks subtasks [list] <gid>`               | List subtasks of a task            | No       |
+| `asx tasks subtasks create <gid>`               | Create a subtask                   | Yes      |
 | `asx tasks comments [list] <gid>`               | List comments on a task            | No       |
 | `asx tasks comments add <gid>`                  | Add a comment to a task            | Yes      |
+| `asx tasks comments remove <story-gid>`         | Remove a comment                   | Yes      |
 | `asx tasks stories [list] <gid>`                | List all stories on a task         | No       |
 | `asx tasks dependencies [list] <gid>`           | List task dependencies             | No       |
 | `asx tasks dependencies add <gid> <dep-gid>`    | Add a dependency                   | Yes      |
@@ -93,6 +95,7 @@ Search flags: `--workspace`, `--assignee`, `--project`, `--completed`, `--due-be
 asx tasks get 1234567890
 asx tasks get 1234567890 --fields name,due_on,custom_fields.display_value
 asx tasks subtasks 1234567890
+asx tasks subtasks create 1234567890 --name "Child task" --assignee me
 ```
 
 ### Create and update
@@ -128,6 +131,9 @@ asx tasks comments list 1234567890 --limit 50
 # Add a comment
 asx tasks comments add 1234567890 --text "Deployed to staging"
 asx tasks comments add 1234567890 --json '{"html_text":"<body>See <a href=\"...\">link</a></body>"}'
+
+# Remove a comment (use story GID from comments list)
+asx tasks comments remove 9876543210
 
 # List all stories (comments + system events)
 asx tasks stories 1234567890
@@ -176,18 +182,20 @@ asx tasks duplicate 1234567890 --name "Copy of task"
 
 ## Projects
 
-| Command                                  | Description                          | Mutating |
-| ---------------------------------------- | ------------------------------------ | -------- |
-| `asx projects list`                      | List projects in a workspace or team | No       |
-| `asx projects get <project-gid>`         | Get project details                  | No       |
-| `asx projects sections <project-gid>`    | List sections in a project           | No       |
-| `asx projects statuses <project-gid>`    | List project status updates          | No       |
-| `asx projects memberships <project-gid>` | List project members                 | No       |
-| `asx projects task-counts <project-gid>` | Get task count summary               | No       |
-| `asx projects create`                    | Create a new project                 | Yes      |
-| `asx projects update <project-gid>`      | Update a project                     | Yes      |
-| `asx projects delete <project-gid>`      | Delete a project                     | Yes      |
-| `asx projects duplicate <project-gid>`   | Duplicate a project                  | Yes      |
+| Command                                                    | Description                          | Mutating |
+| ---------------------------------------------------------- | ------------------------------------ | -------- |
+| `asx projects list`                                        | List projects in a workspace or team | No       |
+| `asx projects get <project-gid>`                           | Get project details                  | No       |
+| `asx projects statuses [list] <project-gid>`               | List project status updates          | No       |
+| `asx projects statuses create <project-gid>`               | Create a project status update       | Yes      |
+| `asx projects memberships [list] <project-gid>`            | List project members                 | No       |
+| `asx projects memberships add <project-gid> <user-gid>`    | Add a member to a project            | Yes      |
+| `asx projects memberships remove <project-gid> <user-gid>` | Remove a member from a project       | Yes      |
+| `asx projects task-counts <project-gid>`                   | Get task count summary               | No       |
+| `asx projects create`                                      | Create a new project                 | Yes      |
+| `asx projects update <project-gid>`                        | Update a project                     | Yes      |
+| `asx projects delete <project-gid>`                        | Delete a project                     | Yes      |
+| `asx projects duplicate <project-gid>`                     | Duplicate a project                  | Yes      |
 
 ```sh
 # List and filter
@@ -197,8 +205,13 @@ asx projects list --archived --limit 50
 
 # Read
 asx projects get 1234567890
-asx projects sections 1234567890
 asx projects statuses 1234567890
+asx projects statuses list 1234567890
+
+# Create a status update
+asx projects statuses create 1234567890 --title "On track" --color on_track --text "Sprint going well"
+asx projects statuses create 1234567890 --json '{"title":"At risk","color":"at_risk","text":"Blocked by dependency"}'
+
 asx projects memberships 1234567890
 asx projects task-counts 1234567890
 
@@ -253,10 +266,13 @@ asx users get 5555555555
 
 ## Custom Fields
 
-| Command                                    | Description                         | Mutating |
-| ------------------------------------------ | ----------------------------------- | -------- |
-| `asx custom-fields list`                   | List custom fields in a workspace   | No       |
-| `asx custom-fields get <custom-field-gid>` | Get custom field definition details | No       |
+| Command                                       | Description                         | Mutating |
+| --------------------------------------------- | ----------------------------------- | -------- |
+| `asx custom-fields list`                      | List custom fields in a workspace   | No       |
+| `asx custom-fields get <custom-field-gid>`    | Get custom field definition details | No       |
+| `asx custom-fields create`                    | Create a custom field definition    | Yes      |
+| `asx custom-fields update <custom-field-gid>` | Update a custom field definition    | Yes      |
+| `asx custom-fields delete <custom-field-gid>` | Delete a custom field definition    | Yes      |
 
 ```sh
 # Discover custom fields in a workspace
@@ -266,13 +282,108 @@ asx custom-fields list --workspace 9876543210
 # Get full definition (type, enum options, format)
 asx custom-fields get 1234567890
 asx custom-fields get 1234567890 --fields name,resource_subtype,enum_options.name,enum_options.color
+
+# Create a custom field
+asx custom-fields create --name "Priority" --resource-subtype enum
+asx custom-fields create --name "Story Points" --resource-subtype number --workspace 9876543210
+asx custom-fields create --json '{"name":"Priority","resource_subtype":"enum","enum_options":[{"name":"High"},{"name":"Low"}]}'
+
+# Update a custom field
+asx custom-fields update 1234567890 --name "Renamed Field"
+asx custom-fields update 1234567890 --description "Updated description"
+
+# Delete a custom field
+asx custom-fields delete 1234567890
 ```
 
-- `custom-fields list` requires a workspace (stored or `--workspace`).
+- `custom-fields list` and `create` require a workspace (stored or `--workspace`).
 - Use GIDs from `list` to set custom field values via `--json` on task create/update:
   `asx tasks create --json '{"name":"Task","projects":["123"],"custom_fields":{"456":"high"}}'`
 - Premium Asana feature; free workspaces may return empty results.
 - `asx describe custom_field` shows all available opt_fields.
+
+## Tags
+
+| Command                         | Description      | Mutating |
+| ------------------------------- | ---------------- | -------- |
+| `asx tags list`                 | List tags        | No       |
+| `asx tags get <tag-gid>`        | Get tag details  | No       |
+| `asx tags create --name <name>` | Create a new tag | Yes      |
+| `asx tags update <tag-gid>`     | Update a tag     | Yes      |
+| `asx tags delete <tag-gid>`     | Delete a tag     | Yes      |
+
+```sh
+# List tags in a workspace
+asx tags list
+asx tags list --workspace 9876543210
+
+# Read
+asx tags get 1234567890
+asx tags get 1234567890 --fields name,color,notes
+
+# Create
+asx tags create --name "Bug" --color "light-red"
+asx tags create --json '{"name":"Priority","color":"light-orange"}'
+
+# Update
+asx tags update 1234567890 --name "Critical Bug" --color "dark-red"
+asx tags update 1234567890 --json '{"notes":"Updated description"}'
+
+# Delete
+asx tags delete 1234567890
+```
+
+- `tags list` requires a workspace (stored or `--workspace`).
+- `--json` and value flags are mutually exclusive on create/update.
+- Tag GIDs are what you pass to `--tag` on `tasks search` and `tasks tags add`/`tasks tags remove`.
+
+## Sections
+
+| Command                             | Description              | Mutating |
+| ----------------------------------- | ------------------------ | -------- |
+| `asx sections list --project <gid>` | List sections in project | No       |
+| `asx sections get <section-gid>`    | Get section details      | No       |
+| `asx sections create --name <name>` | Create a new section     | Yes      |
+| `asx sections update <section-gid>` | Update a section         | Yes      |
+| `asx sections delete <section-gid>` | Delete a section         | Yes      |
+
+```sh
+# List sections
+asx sections list --project 1234567890
+
+# Get section details
+asx sections get 9876543210
+
+# Create a section
+asx sections create --name "Backlog" --project 1234567890
+asx sections create --json '{"name":"In Progress"}' --project 1234567890 --dry-run
+
+# Update a section
+asx sections update 9876543210 --name "Done"
+
+# Delete a section
+asx sections delete 9876543210
+```
+
+- `--project` is required for `sections list` and `sections create` (when not using `--json`).
+- `--json` and value flags are mutually exclusive.
+
+## Teams
+
+| Command                    | Description                   |
+| -------------------------- | ----------------------------- |
+| `asx teams list`           | List teams in an organisation |
+| `asx teams get <team-gid>` | Get team details              |
+
+```sh
+asx teams list
+asx teams list --workspace 9876543210
+asx teams get 1204567890123456
+asx teams get 1204567890123456 --fields name,description,permalink_url
+```
+
+- `teams list` requires a workspace (stored or `--workspace`). Uses the `/organizations/{gid}/teams` endpoint.
+- `teams get` returns all TEAM_FIELDS by default.
 
 ## Common flags
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
-import { AuthError, ApiError } from "@/errors/errors";
 import { AsanaClient } from "@/client/asana-client";
+import { AuthError, ApiError } from "@/errors/errors";
 
 interface CapturedRequest {
   url: string;

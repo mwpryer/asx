@@ -1,5 +1,5 @@
-import { AuthError } from "@/errors/errors";
 import { getAccount, loadAccounts } from "@/auth/token-store";
+import { AuthError } from "@/errors/errors";
 
 export interface ResolvePatOpts {
   account?: string;

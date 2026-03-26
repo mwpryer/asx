@@ -3,9 +3,9 @@ import os from "node:os";
 import path from "node:path";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-import { AuthError } from "@/errors/errors";
 import { resolveAuth, resolvePat } from "@/auth/resolve";
 import { setAccount } from "@/auth/token-store";
+import { AuthError } from "@/errors/errors";
 
 let tmpDir: string;
 

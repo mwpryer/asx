@@ -1,11 +1,12 @@
-import { buildCommand } from "@stricli/core";
-
 import {
   AsanaClient,
+  InputError,
   formatJSON,
   resolvePat,
   validateGid,
 } from "@mwp13/asx-core";
+import { buildCommand } from "@stricli/core";
+
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
@@ -19,32 +20,44 @@ import {
   type PaginationFlags,
 } from "@/flags";
 
-export const sectionsCommand = buildCommand({
+export const listCommand = buildCommand({
   docs: { brief: "List sections in a project" },
   parameters: {
-    positional: {
-      kind: "tuple",
-      parameters: [
-        { brief: "Project GID", placeholder: "project-gid", parse: String },
-      ],
-    },
+    positional: { kind: "tuple", parameters: [] },
     flags: {
       ...paginationFlags,
+      project: {
+        kind: "parsed",
+        brief: "Project GID",
+        parse: String,
+        optional: true,
+      },
       account: accountFlag,
       fields: fieldsFlag,
     },
   },
   func: asxFunc(async function (
     this: AsxCliContext,
-    flags: AccountFlag & FieldsFlag & PaginationFlags,
-    projectGid: string,
+    flags: AccountFlag &
+      FieldsFlag &
+      PaginationFlags & {
+        project: string | undefined;
+      },
   ) {
-    validateGid(projectGid, "project-gid");
+    if (!flags.project) {
+      throw new InputError(
+        "INPUT_MISSING",
+        "--project is required",
+        "Provide --project <gid> to specify which project's sections to list",
+      );
+    }
+
+    validateGid(flags.project, "project");
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
     const res = await client.request({
-      path: `/projects/${projectGid}/sections`,
+      path: `/projects/${flags.project}/sections`,
       query: {
         limit: resolveLimit(flags),
         ...(flags.offset && { offset: flags.offset }),
@@ -55,7 +68,7 @@ export const sectionsCommand = buildCommand({
     this.process.stdout.write(
       formatJSON(
         { sections: res.data },
-        { command: "projects.sections", pagination: paginationMeta(res) },
+        { command: "sections.list", pagination: paginationMeta(res) },
       ) + "\n",
     );
   }),

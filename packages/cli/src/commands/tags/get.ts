@@ -1,0 +1,49 @@
+import {
+  AsanaClient,
+  TAG_FIELDS,
+  formatJSON,
+  resolvePat,
+  validateGid,
+} from "@mwp13/asx-core";
+import { buildCommand } from "@stricli/core";
+
+import { asxFunc } from "@/command";
+import type { AsxCliContext } from "@/context";
+import {
+  accountFlag,
+  fieldsFlag,
+  type AccountFlag,
+  type FieldsFlag,
+} from "@/flags";
+
+export const getCommand = buildCommand({
+  docs: { brief: "Get tag details" },
+  parameters: {
+    positional: {
+      kind: "tuple",
+      parameters: [{ brief: "Tag GID", placeholder: "tag-gid", parse: String }],
+    },
+    flags: {
+      account: accountFlag,
+      fields: fieldsFlag,
+    },
+  },
+  func: asxFunc(async function (
+    this: AsxCliContext,
+    flags: AccountFlag & FieldsFlag,
+    tagGid: string,
+  ) {
+    validateGid(tagGid, "tag-gid");
+
+    const pat = resolvePat({ account: flags.account });
+    const client = new AsanaClient({ pat });
+    const res = await client.request({
+      path: `/tags/${tagGid}`,
+      optFields: flags.fields?.split(",") ?? [...TAG_FIELDS],
+    });
+
+    this.process.stdout.write(
+      formatJSON({ tag: res.data }, { command: "tags.get" }) + "\n",
+    );
+  }),
+});

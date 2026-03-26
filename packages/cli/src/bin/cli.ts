@@ -1,10 +1,10 @@
+import { EXIT_INPUT } from "@mwp13/asx-core";
 import type { StricliDynamicCommandContext } from "@stricli/core";
 import { run } from "@stricli/core";
 
-import { EXIT_INPUT } from "@mwp13/asx-core";
+import { app } from "@/app";
 import { getCapturedExitCode } from "@/command";
 import type { AsxCliContext } from "@/context";
-import { app } from "@/app";
 
 // Buffer stderr so Stricli errors re-emit as JSON on stdout
 const stderrChunks: string[] = [];

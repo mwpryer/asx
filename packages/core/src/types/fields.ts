@@ -116,3 +116,26 @@ export const CUSTOM_FIELD_FIELDS = [
   "created_by.name",
   "has_notifications_enabled",
 ] as const;
+
+export const TAG_FIELDS = [
+  "gid",
+  "name",
+  "color",
+  "notes",
+  "workspace",
+  "workspace.name",
+  "followers",
+  "followers.name",
+  "created_at",
+  "permalink_url",
+] as const;
+
+export const TEAM_FIELDS = [
+  "gid",
+  "name",
+  "description",
+  "html_description",
+  "organization",
+  "organization.name",
+  "permalink_url",
+] as const;
