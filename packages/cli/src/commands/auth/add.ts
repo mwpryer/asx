@@ -46,6 +46,14 @@ export const addCommand = buildCommand({
     flags: { pat: string; workspace: string | undefined },
     alias: string,
   ) {
+    if (/^(__proto__|constructor|prototype)$/.test(alias)) {
+      throw new InputError(
+        "INPUT_INVALID",
+        `"${alias}" is not a valid account alias`,
+        "Choose a different alias name",
+      );
+    }
+
     const client = new AsanaClient({ pat: flags.pat });
     const res = await client.request<{
       gid: string;

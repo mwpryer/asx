@@ -131,6 +131,14 @@ export const createCommand = buildCommand({
       if (flags.due) v.parse(s.date("due"), flags.due);
       if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
 
+      if (flags.parent && flags.project) {
+        throw new InputError(
+          "INPUT_INVALID",
+          "--parent and --project cannot be used together",
+          "Pass one or the other. To add a subtask to a project, create it with --parent then use `asx tasks projects add`",
+        );
+      }
+
       body = { name };
       if (flags.parent) {
         body["parent"] = flags.parent;

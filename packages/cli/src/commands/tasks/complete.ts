@@ -41,7 +41,7 @@ export const completeCommand = buildCommand({
     v.parse(s.gid("task-gid"), taskGid);
 
     const body: Record<string, unknown> = flags.json
-      ? parseJsonInput(flags.json)
+      ? { ...parseJsonInput(flags.json), completed: true }
       : { completed: true };
 
     const path = `/tasks/${taskGid}`;
