@@ -42,25 +42,34 @@ asx tasks search "bug" --account work
 
 ## Tasks
 
-| Command                               | Description                        | Mutating |
-| ------------------------------------- | ---------------------------------- | -------- |
-| `asx tasks search <query>`            | Search tasks in a workspace        | No       |
-| `asx tasks list`                      | List tasks in a project or section | No       |
-| `asx tasks get <task-gid>`            | Get full task details              | No       |
-| `asx tasks subtasks <task-gid>`       | List subtasks of a task            | No       |
-| `asx tasks create`                    | Create a new task                  | Yes      |
-| `asx tasks update <task-gid>`         | Update a task                      | Yes      |
-| `asx tasks complete <task-gid>`       | Mark a task complete               | Yes      |
-| `asx tasks delete <task-gid>`         | Delete a task                      | Yes      |
-| `asx tasks comments <task-gid>`       | List or add comments on a task     | Mixed    |
-| `asx tasks stories <task-gid>`        | List all stories on a task         | No       |
-| `asx tasks duplicate <task-gid>`      | Duplicate a task                   | Yes      |
-| `asx tasks dependencies <task-gid>`   | List/add/remove dependencies       | Mixed    |
-| `asx tasks followers <task-gid>`      | Add/remove followers               | Yes      |
-| `asx tasks add-project <task-gid>`    | Add task to a project              | Yes      |
-| `asx tasks remove-project <task-gid>` | Remove task from a project         | Yes      |
-| `asx tasks add-tag <task-gid>`        | Add a tag to a task                | Yes      |
-| `asx tasks remove-tag <task-gid>`     | Remove a tag from a task           | Yes      |
+| Command                                         | Description                        | Mutating |
+| ----------------------------------------------- | ---------------------------------- | -------- |
+| `asx tasks search <query>`                      | Search tasks in a workspace        | No       |
+| `asx tasks list`                                | List tasks in a project or section | No       |
+| `asx tasks get <gid>`                           | Get full task details              | No       |
+| `asx tasks create`                              | Create a new task                  | Yes      |
+| `asx tasks update <gid>`                        | Update a task                      | Yes      |
+| `asx tasks complete <gid>`                      | Mark a task complete               | Yes      |
+| `asx tasks delete <gid>`                        | Delete a task                      | Yes      |
+| `asx tasks duplicate <gid>`                     | Duplicate a task                   | Yes      |
+| `asx tasks subtasks <gid>`                      | List subtasks of a task            | No       |
+| `asx tasks comments [list] <gid>`               | List comments on a task            | No       |
+| `asx tasks comments add <gid>`                  | Add a comment to a task            | Yes      |
+| `asx tasks stories [list] <gid>`                | List all stories on a task         | No       |
+| `asx tasks dependencies [list] <gid>`           | List task dependencies             | No       |
+| `asx tasks dependencies add <gid> <dep-gid>`    | Add a dependency                   | Yes      |
+| `asx tasks dependencies remove <gid> <dep-gid>` | Remove a dependency                | Yes      |
+| `asx tasks followers [list] <gid>`              | List task followers                | No       |
+| `asx tasks followers add <gid> <user-gid>`      | Add a follower                     | Yes      |
+| `asx tasks followers remove <gid> <user-gid>`   | Remove a follower                  | Yes      |
+| `asx tasks projects [list] <gid>`               | List projects a task belongs to    | No       |
+| `asx tasks projects add <gid> <project-gid>`    | Add a task to a project            | Yes      |
+| `asx tasks projects remove <gid> <project-gid>` | Remove a task from a project       | Yes      |
+| `asx tasks tags [list] <gid>`                   | List tags on a task                | No       |
+| `asx tasks tags add <gid> <tag-gid>`            | Add a tag to a task                | Yes      |
+| `asx tasks tags remove <gid> <tag-gid>`         | Remove a tag from a task           | Yes      |
+
+`[list]` is the default subcommand and can be omitted.
 
 ### Search and list
 
@@ -112,36 +121,43 @@ asx tasks create --name "Test" --project 123 --dry-run
 ### Comments and stories
 
 ```sh
-# List comments (no flags = list, filtered to resource_subtype: comment_added)
+# List comments (filtered to comment_added)
 asx tasks comments 1234567890
-asx tasks comments 1234567890 --limit 50
+asx tasks comments list 1234567890 --limit 50
 
-# Add a comment (--text or --json triggers add mode)
-asx tasks comments 1234567890 --text "Deployed to staging"
-asx tasks comments 1234567890 --json '{"html_text":"<body>See <a href=\"...\">link</a></body>"}'
+# Add a comment
+asx tasks comments add 1234567890 --text "Deployed to staging"
+asx tasks comments add 1234567890 --json '{"html_text":"<body>See <a href=\"...\">link</a></body>"}'
 
-# List all stories (comments + system events like assignments, status changes)
+# List all stories (comments + system events)
 asx tasks stories 1234567890
-asx tasks stories 1234567890 --limit 50
+asx tasks stories list 1234567890 --limit 50
 ```
 
-### Relationships
+### Child entities
+
+All child entity commands follow `asx tasks <entity> {list, add, remove} <gid>`. `list` is the default and can be omitted.
 
 ```sh
-# Dependencies (no flags = list, --add/--remove to mutate)
-asx tasks dependencies 1234567890
-asx tasks dependencies 1234567890 --add 9876543210
-asx tasks dependencies 1234567890 --remove 9876543210
+# Dependencies
+asx tasks dependencies 1234567890                    # list
+asx tasks dependencies add 1234567890 9876543210     # add
+asx tasks dependencies remove 1234567890 9876543210  # remove
 
-# Followers (--add or --remove required)
-asx tasks followers 1234567890 --add 5555555555
-asx tasks followers 1234567890 --remove 5555555555
+# Followers
+asx tasks followers 1234567890                       # list
+asx tasks followers add 1234567890 5555555555        # add
+asx tasks followers remove 1234567890 5555555555     # remove
 
-# Project/tag associations
-asx tasks add-project 1234567890 --project 123 --section 456
-asx tasks remove-project 1234567890 --project 123
-asx tasks add-tag 1234567890 --tag 789
-asx tasks remove-tag 1234567890 --tag 789
+# Project associations
+asx tasks projects 1234567890                        # list
+asx tasks projects add 1234567890 123 --section 456  # add (with optional section)
+asx tasks projects remove 1234567890 123             # remove
+
+# Tag associations
+asx tasks tags 1234567890                            # list
+asx tasks tags add 1234567890 789                    # add
+asx tasks tags remove 1234567890 789                 # remove
 
 # Duplicate
 asx tasks duplicate 1234567890 --name "Copy of task"
@@ -155,10 +171,7 @@ asx tasks duplicate 1234567890 --name "Copy of task"
 - `--assignee` accepts `"me"` or a numeric user GID.
 - `tasks search` requires a workspace (stored or `--workspace`).
 - `tasks list` requires exactly one of `--project` or `--section`.
-- `tasks comments` with no flags lists; with `--text`/`--json` adds a comment.
-- `tasks comments` returns only user comments; `tasks stories` returns all activity (comments, assignments, project additions, etc.).
-- `tasks dependencies` with no flags lists; with `--add`/`--remove` mutates.
-- `tasks followers` requires exactly one of `--add` or `--remove`.
+- `tasks comments` returns only user comments; `tasks stories` returns all activity.
 - Dates must be `YYYY-MM-DD`. GIDs must be numeric.
 
 ## Projects
@@ -263,14 +276,14 @@ asx custom-fields get 1234567890 --fields name,resource_subtype,enum_options.nam
 
 ## Common flags
 
-| Flag                | Used on                         | Description                                         |
-| ------------------- | ------------------------------- | --------------------------------------------------- |
-| `--account <alias>` | All commands                    | Select which stored account to use                  |
-| `--fields <csv>`    | Read commands                   | Override default opt_fields                         |
-| `--limit <1-100>`   | Paginated reads                 | Results per page (default 20)                       |
-| `--offset <token>`  | Paginated reads                 | Pagination token from previous response             |
-| `--dry-run`         | All mutations                   | Preview the request without sending it              |
-| `--json <body>`     | create/update/complete/comments | Raw JSON body (mutually exclusive with value flags) |
+| Flag                | Used on                             | Description                                         |
+| ------------------- | ----------------------------------- | --------------------------------------------------- |
+| `--account <alias>` | All commands                        | Select which stored account to use                  |
+| `--fields <csv>`    | Read commands                       | Override default opt_fields                         |
+| `--limit <1-100>`   | Paginated reads                     | Results per page (default 20)                       |
+| `--offset <token>`  | Paginated reads                     | Pagination token from previous response             |
+| `--dry-run`         | All mutations                       | Preview the request without sending it              |
+| `--json <body>`     | create/update/complete/comments add | Raw JSON body (mutually exclusive with value flags) |
 
 ## Errors
 

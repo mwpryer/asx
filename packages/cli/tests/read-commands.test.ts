@@ -15,8 +15,10 @@ vi.mock("@mwp13/asx-core", async (importOriginal) => {
   };
 });
 
-const { storiesCommand } = await import("@/commands/tasks/stories");
-const { commentsCommand } = await import("@/commands/tasks/comments");
+const { listCommand: storiesListCommand } =
+  await import("@/commands/tasks/stories/list");
+const { listCommand: commentsListCommand } =
+  await import("@/commands/tasks/comments/list");
 
 beforeEach(() => {
   mockRequest.mockReset();
@@ -53,7 +55,7 @@ describe("tasks stories", () => {
   it("returns all stories from the API", async () => {
     mockRequest.mockResolvedValue({ data: mixedStories, next_page: null });
     const ctx = createMockContext();
-    const func = await loadCommand(storiesCommand);
+    const func = await loadCommand(storiesListCommand);
     await func.call(
       ctx,
       {
@@ -67,13 +69,13 @@ describe("tasks stories", () => {
     const out = parseOutput(ctx);
     expect(out["stories"]).toEqual(mixedStories);
     const meta = out["_meta"] as Record<string, unknown>;
-    expect(meta["command"]).toBe("tasks.stories");
+    expect(meta["command"]).toBe("tasks.stories.list");
   });
 
   it("passes pagination to API request", async () => {
     mockRequest.mockResolvedValue({ data: [], next_page: null });
     const ctx = createMockContext();
-    const func = await loadCommand(storiesCommand);
+    const func = await loadCommand(storiesListCommand);
     await func.call(
       ctx,
       {
@@ -94,7 +96,7 @@ describe("tasks stories", () => {
 
   it("rejects invalid GID", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(storiesCommand);
+    const func = await loadCommand(storiesListCommand);
     await func.call(
       ctx,
       {
@@ -117,7 +119,7 @@ describe("tasks comments", () => {
   it("filters to comment_added stories only", async () => {
     mockRequest.mockResolvedValue({ data: mixedStories, next_page: null });
     const ctx = createMockContext();
-    const func = await loadCommand(commentsCommand);
+    const func = await loadCommand(commentsListCommand);
     await func.call(
       ctx,
       {
@@ -134,14 +136,14 @@ describe("tasks comments", () => {
     expect(comments[0]!["gid"]).toBe("1");
     expect(comments[1]!["gid"]).toBe("3");
     const meta = out["_meta"] as Record<string, unknown>;
-    expect(meta["command"]).toBe("tasks.comments");
+    expect(meta["command"]).toBe("tasks.comments.list");
   });
 
   it("returns empty array when no comments exist", async () => {
     const systemOnly = [mixedStories[1]];
     mockRequest.mockResolvedValue({ data: systemOnly, next_page: null });
     const ctx = createMockContext();
-    const func = await loadCommand(commentsCommand);
+    const func = await loadCommand(commentsListCommand);
     await func.call(
       ctx,
       {
@@ -158,7 +160,7 @@ describe("tasks comments", () => {
 
   it("rejects invalid GID", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(commentsCommand);
+    const func = await loadCommand(commentsListCommand);
     await func.call(
       ctx,
       {

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import { InputError } from "@mwp13/asx-core";
 import { parseJsonInput } from "@/flags";
-import { commentsCommand } from "@/commands/tasks/comments";
+import { addCommand as commentsAddCommand } from "@/commands/tasks/comments/add";
 import { completeCommand } from "@/commands/tasks/complete";
 import { createCommand } from "@/commands/tasks/create";
 import { updateCommand } from "@/commands/tasks/update";
@@ -134,7 +134,7 @@ describe("--dry-run output", () => {
 
   it("tasks comments outputs _meta.dry_run, method, path, body", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(commentsCommand);
+    const func = await loadCommand(commentsAddCommand);
     await func.call(
       ctx,
       {
@@ -206,7 +206,7 @@ describe("--json and value flags mutual exclusivity", () => {
 
   it("tasks comments writes INPUT_INVALID to stdout when --json and text both provided", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(commentsCommand);
+    const func = await loadCommand(commentsAddCommand);
     await func.call(
       ctx,
       {
@@ -294,7 +294,7 @@ describe("--json and --dry-run coexistence", () => {
 
   it("tasks comments preview shows the raw JSON payload", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(commentsCommand);
+    const func = await loadCommand(commentsAddCommand);
     await func.call(
       ctx,
       {

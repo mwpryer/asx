@@ -2,7 +2,6 @@ import { buildCommand } from "@stricli/core";
 
 import {
   AsanaClient,
-  InputError,
   formatJSON,
   hint,
   resolvePat,
@@ -17,53 +16,42 @@ import {
   type DryRunFlag,
 } from "@/flags";
 
-export const removeTagCommand = buildCommand({
-  docs: { brief: "Remove a tag from a task" },
+export const addCommand = buildCommand({
+  docs: { brief: "Add a dependency to a task" },
   parameters: {
     positional: {
       kind: "tuple",
       parameters: [
         { brief: "Task GID", placeholder: "task-gid", parse: String },
+        {
+          brief: "Dependency task GID",
+          placeholder: "dependency-gid",
+          parse: String,
+        },
       ],
     },
     flags: {
-      tag: {
-        kind: "parsed",
-        brief: "Tag GID",
-        parse: String,
-        optional: true,
-      },
       account: accountFlag,
       dryRun: dryRunFlag,
     },
   },
   func: asxFunc(async function (
     this: AsxCliContext,
-    flags: AccountFlag &
-      DryRunFlag & {
-        tag: string | undefined;
-      },
+    flags: AccountFlag & DryRunFlag,
     taskGid: string,
+    depGid: string,
   ) {
     validateGid(taskGid, "task-gid");
+    validateGid(depGid, "dependency-gid");
 
-    if (!flags.tag) {
-      throw new InputError(
-        "INPUT_MISSING",
-        "--tag is required",
-        "Pass --tag <gid>",
-      );
-    }
-    validateGid(flags.tag, "tag");
-
-    const path = `/tasks/${taskGid}/removeTag`;
-    const body = { tag: flags.tag };
+    const path = `/tasks/${taskGid}/addDependencies`;
+    const body = { dependencies: [depGid] };
 
     if (flags.dryRun) {
       this.process.stdout.write(
         formatJSON(
           { method: "POST", path, body },
-          { command: "tasks.remove-tag", dry_run: true },
+          { command: "tasks.dependencies.add", dry_run: true },
         ) + "\n",
       );
       return;
@@ -78,8 +66,11 @@ export const removeTagCommand = buildCommand({
     });
 
     this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.remove-tag" }) + "\n",
+      formatJSON(
+        { dependencies: res.data },
+        { command: "tasks.dependencies.add" },
+      ) + "\n",
     );
-    hint(`Tag ${flags.tag} removed from task ${taskGid}`);
+    hint(`Dependency ${depGid} added to task ${taskGid}`);
   }),
 });

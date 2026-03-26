@@ -2,7 +2,6 @@ import { buildCommand } from "@stricli/core";
 
 import {
   AsanaClient,
-  InputError,
   formatJSON,
   hint,
   resolvePat,
@@ -17,53 +16,38 @@ import {
   type DryRunFlag,
 } from "@/flags";
 
-export const removeProjectCommand = buildCommand({
-  docs: { brief: "Remove a task from a project" },
+export const removeCommand = buildCommand({
+  docs: { brief: "Remove a follower from a task" },
   parameters: {
     positional: {
       kind: "tuple",
       parameters: [
         { brief: "Task GID", placeholder: "task-gid", parse: String },
+        { brief: "User GID", placeholder: "user-gid", parse: String },
       ],
     },
     flags: {
-      project: {
-        kind: "parsed",
-        brief: "Project GID",
-        parse: String,
-        optional: true,
-      },
       account: accountFlag,
       dryRun: dryRunFlag,
     },
   },
   func: asxFunc(async function (
     this: AsxCliContext,
-    flags: AccountFlag &
-      DryRunFlag & {
-        project: string | undefined;
-      },
+    flags: AccountFlag & DryRunFlag,
     taskGid: string,
+    userGid: string,
   ) {
     validateGid(taskGid, "task-gid");
+    validateGid(userGid, "user-gid");
 
-    if (!flags.project) {
-      throw new InputError(
-        "INPUT_MISSING",
-        "--project is required",
-        "Pass --project <gid>",
-      );
-    }
-    validateGid(flags.project, "project");
-
-    const path = `/tasks/${taskGid}/removeProject`;
-    const body = { project: flags.project };
+    const path = `/tasks/${taskGid}/removeFollowers`;
+    const body = { followers: [userGid] };
 
     if (flags.dryRun) {
       this.process.stdout.write(
         formatJSON(
           { method: "POST", path, body },
-          { command: "tasks.remove-project", dry_run: true },
+          { command: "tasks.followers.remove", dry_run: true },
         ) + "\n",
       );
       return;
@@ -78,9 +62,9 @@ export const removeProjectCommand = buildCommand({
     });
 
     this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.remove-project" }) +
+      formatJSON({ task: res.data }, { command: "tasks.followers.remove" }) +
         "\n",
     );
-    hint(`Task ${taskGid} removed from project ${flags.project}`);
+    hint(`Follower ${userGid} removed from task ${taskGid}`);
   }),
 });

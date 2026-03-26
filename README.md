@@ -99,7 +99,7 @@ These flags appear on multiple commands:
 | `--account <alias>` | All commands that call the API                                                             | Account to use (see [Resolution order](#resolution-order))  |
 | `--fields <fields>` | All resource-returning commands (`tasks`, `projects`, `workspaces`, `custom-fields`, etc.) | Comma-separated field names to return (overrides defaults)  |
 | `--dry-run`         | Mutating commands (create, update, delete, duplicate, etc.)                                | Preview the request without sending it                      |
-| `--json <json>`     | Mutating commands that accept a body (`create`, `update`, `comments`)                      | Raw JSON request body (mutually exclusive with value flags) |
+| `--json <json>`     | Mutating commands that accept a body (`create`, `update`, `comments add`)                  | Raw JSON request body (mutually exclusive with value flags) |
 
 ### `asx describe` - Schema introspection
 
@@ -140,28 +140,39 @@ asx auth status --account work
 | `asx tasks update <gid>`                        | Update a task                      |
 | `asx tasks complete <gid>`                      | Mark a task as completed           |
 | `asx tasks delete <gid>`                        | Delete a task                      |
-| `asx tasks comments <gid>`                      | List or add comments on a task     |
-| `asx tasks stories <gid>`                       | List all stories on a task         |
-| `asx tasks subtasks <gid>`                      | List subtasks of a task            |
 | `asx tasks duplicate <gid> --name <name>`       | Duplicate a task                   |
-| `asx tasks dependencies <gid>`                  | List, add, or remove dependencies  |
-| `asx tasks followers <gid>`                     | Add or remove followers            |
-| `asx tasks add-project <gid> --project <id>`    | Add a task to a project            |
-| `asx tasks remove-project <gid> --project <id>` | Remove a task from a project       |
-| `asx tasks add-tag <gid> --tag <id>`            | Add a tag to a task                |
-| `asx tasks remove-tag <gid> --tag <id>`         | Remove a tag from a task           |
+| `asx tasks subtasks <gid>`                      | List subtasks of a task            |
+| `asx tasks comments [list] <gid>`               | List comments on a task            |
+| `asx tasks comments add <gid> --text <text>`    | Add a comment to a task            |
+| `asx tasks stories [list] <gid>`                | List all stories on a task         |
+| `asx tasks dependencies [list] <gid>`           | List task dependencies             |
+| `asx tasks dependencies add <gid> <dep-gid>`    | Add a dependency                   |
+| `asx tasks dependencies remove <gid> <dep-gid>` | Remove a dependency                |
+| `asx tasks followers [list] <gid>`              | List task followers                |
+| `asx tasks followers add <gid> <user-gid>`      | Add a follower                     |
+| `asx tasks followers remove <gid> <user-gid>`   | Remove a follower                  |
+| `asx tasks projects [list] <gid>`               | List projects a task belongs to    |
+| `asx tasks projects add <gid> <project-gid>`    | Add a task to a project            |
+| `asx tasks projects remove <gid> <project-gid>` | Remove a task from a project       |
+| `asx tasks tags [list] <gid>`                   | List tags on a task                |
+| `asx tasks tags add <gid> <tag-gid>`            | Add a tag to a task                |
+| `asx tasks tags remove <gid> <tag-gid>`         | Remove a tag from a task           |
+
+`[list]` is the default subcommand and can be omitted.
 
 ```bash
-asx tasks search "bug" --workspace 1209876543210987 --assignee me --project 1201234567890123 # search with filters
-asx tasks list --project 1201234567890123 # list tasks in a project
+asx tasks search "bug" --workspace 1209876543210987 --assignee me --project 1201234567890123
+asx tasks list --project 1201234567890123
 asx tasks create --name "Fix login" --project 1201234567890123 --assignee me --due 2026-03-15 --notes "See ticket #42"
 asx tasks update 1205678901234567 --name "Fix login flow" --due 2026-03-20
 asx tasks complete 1205678901234567
-asx tasks comments 1205678901234567                   # list comments
-asx tasks comments 1205678901234567 --text "Done, deployed to staging" # add a comment
-asx tasks stories 1205678901234567                    # list all stories (comments + system events)
-asx tasks add-project 1205678901234567 --project 1201234567890456 --section 1203456789012345
-asx tasks add-tag 1205678901234567 --tag 1207890123456789
+asx tasks comments 1205678901234567                       # list comments (default)
+asx tasks comments add 1205678901234567 --text "Deployed" # add a comment
+asx tasks stories 1205678901234567                        # list all stories
+asx tasks dependencies 1205678901234567                   # list dependencies
+asx tasks dependencies add 1205678901234567 9876543210    # add a dependency
+asx tasks projects add 1205678901234567 1201234567890456 --section 1203456789012345
+asx tasks tags add 1205678901234567 1207890123456789
 ```
 
 #### tasks search flags
@@ -375,7 +386,7 @@ Use `asx describe task` to discover available fields for a resource type.
 
 ### Dry-run mode (`--dry-run`)
 
-Preview mutation requests without sending them. No auth required. Available on all mutating commands (create, update, delete, duplicate, complete, comments, add-project, etc.).
+Preview mutation requests without sending them. No auth required. Available on all mutating commands (create, update, delete, duplicate, complete, comments add, dependencies add/remove, etc.).
 
 ```bash
 asx tasks create --name "Deploy v2" --project 1201234567890123 --dry-run

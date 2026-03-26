@@ -2,7 +2,6 @@ import { buildCommand } from "@stricli/core";
 
 import {
   AsanaClient,
-  InputError,
   formatJSON,
   hint,
   resolvePat,
@@ -17,25 +16,20 @@ import {
   type DryRunFlag,
 } from "@/flags";
 
-export const addProjectCommand = buildCommand({
+export const addCommand = buildCommand({
   docs: { brief: "Add a task to a project" },
   parameters: {
     positional: {
       kind: "tuple",
       parameters: [
         { brief: "Task GID", placeholder: "task-gid", parse: String },
+        { brief: "Project GID", placeholder: "project-gid", parse: String },
       ],
     },
     flags: {
-      project: {
-        kind: "parsed",
-        brief: "Project GID",
-        parse: String,
-        optional: true,
-      },
       section: {
         kind: "parsed",
-        brief: "Section GID within the project",
+        brief: "Section GID (optional placement)",
         parse: String,
         optional: true,
       },
@@ -45,36 +39,23 @@ export const addProjectCommand = buildCommand({
   },
   func: asxFunc(async function (
     this: AsxCliContext,
-    flags: AccountFlag &
-      DryRunFlag & {
-        project: string | undefined;
-        section: string | undefined;
-      },
+    flags: AccountFlag & DryRunFlag & { section: string | undefined },
     taskGid: string,
+    projectGid: string,
   ) {
     validateGid(taskGid, "task-gid");
-
-    if (!flags.project) {
-      throw new InputError(
-        "INPUT_MISSING",
-        "--project is required",
-        "Pass --project <gid>",
-      );
-    }
-    validateGid(flags.project, "project");
+    validateGid(projectGid, "project-gid");
     if (flags.section) validateGid(flags.section, "section");
 
     const path = `/tasks/${taskGid}/addProject`;
-    const body = {
-      project: flags.project,
-      ...(flags.section && { section: flags.section }),
-    };
+    const body: Record<string, string> = { project: projectGid };
+    if (flags.section) body["section"] = flags.section;
 
     if (flags.dryRun) {
       this.process.stdout.write(
         formatJSON(
           { method: "POST", path, body },
-          { command: "tasks.add-project", dry_run: true },
+          { command: "tasks.projects.add", dry_run: true },
         ) + "\n",
       );
       return;
@@ -89,8 +70,8 @@ export const addProjectCommand = buildCommand({
     });
 
     this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.add-project" }) + "\n",
+      formatJSON({ task: res.data }, { command: "tasks.projects.add" }) + "\n",
     );
-    hint(`Task ${taskGid} added to project ${flags.project}`);
+    hint(`Task ${taskGid} added to project ${projectGid}`);
   }),
 });

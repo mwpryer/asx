@@ -390,16 +390,10 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.comments": {
-    brief: "List or add comments on a task",
+  "tasks.comments.list": {
+    brief: "List comments on a task",
     positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
     flags: [
-      {
-        name: "text",
-        type: "string",
-        required: false,
-        brief: "Comment text (triggers add mode)",
-      },
       {
         name: "limit",
         type: "number",
@@ -412,6 +406,25 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
         required: false,
         brief: "Pagination offset from a previous response",
       },
+      {
+        name: "fields",
+        type: "string",
+        required: false,
+        brief: "Comma-separated field names to return (overrides defaults)",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.comments.add": {
+    brief: "Add a comment to a task",
+    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+    flags: [
+      { name: "text", type: "string", required: false, brief: "Comment text" },
       {
         name: "dry-run",
         type: "boolean",
@@ -438,7 +451,7 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.stories": {
+  "tasks.stories.list": {
     brief: "List all stories on a task",
     positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
     flags: [
@@ -704,22 +717,10 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.dependencies": {
-    brief: "List, add, or remove task dependencies",
+  "tasks.dependencies.list": {
+    brief: "List task dependencies",
     positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
     flags: [
-      {
-        name: "add",
-        type: "string",
-        required: false,
-        brief: "Dependency task GID to add",
-      },
-      {
-        name: "remove",
-        type: "string",
-        required: false,
-        brief: "Dependency task GID to remove",
-      },
       {
         name: "limit",
         type: "number",
@@ -731,12 +732,6 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
         type: "string",
         required: false,
         brief: "Pagination offset from a previous response",
-      },
-      {
-        name: "dry-run",
-        type: "boolean",
-        required: false,
-        brief: "Preview the request without sending it",
       },
       {
         name: "fields",
@@ -752,22 +747,13 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.followers": {
-    brief: "Add or remove task followers",
-    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+  "tasks.dependencies.add": {
+    brief: "Add a dependency to a task",
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "dependency-gid", type: "string", brief: "Dependency task GID" },
+    ],
     flags: [
-      {
-        name: "add",
-        type: "string",
-        required: false,
-        brief: "Follower user GID to add",
-      },
-      {
-        name: "remove",
-        type: "string",
-        required: false,
-        brief: "Follower user GID to remove",
-      },
       {
         name: "dry-run",
         type: "boolean",
@@ -782,16 +768,112 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.add-project": {
-    brief: "Add a task to a project",
+  "tasks.dependencies.remove": {
+    brief: "Remove a dependency from a task",
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "dependency-gid", type: "string", brief: "Dependency task GID" },
+    ],
+    flags: [
+      {
+        name: "dry-run",
+        type: "boolean",
+        required: false,
+        brief: "Preview the request without sending it",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.followers.list": {
+    brief: "List followers of a task",
     positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
     flags: [
       {
-        name: "project",
+        name: "fields",
         type: "string",
         required: false,
-        brief: "Project GID",
+        brief: "Comma-separated field names to return (overrides defaults)",
       },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.followers.add": {
+    brief: "Add a follower to a task",
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "user-gid", type: "string", brief: "User GID" },
+    ],
+    flags: [
+      {
+        name: "dry-run",
+        type: "boolean",
+        required: false,
+        brief: "Preview the request without sending it",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.followers.remove": {
+    brief: "Remove a follower from a task",
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "user-gid", type: "string", brief: "User GID" },
+    ],
+    flags: [
+      {
+        name: "dry-run",
+        type: "boolean",
+        required: false,
+        brief: "Preview the request without sending it",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.projects.list": {
+    brief: "List projects a task belongs to",
+    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+    flags: [
+      {
+        name: "fields",
+        type: "string",
+        required: false,
+        brief: "Comma-separated field names to return (overrides defaults)",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.projects.add": {
+    brief: "Add a task to a project",
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "project-gid", type: "string", brief: "Project GID" },
+    ],
+    flags: [
       {
         name: "section",
         type: "string",
@@ -812,16 +894,13 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.remove-project": {
+  "tasks.projects.remove": {
     brief: "Remove a task from a project",
-    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "project-gid", type: "string", brief: "Project GID" },
+    ],
     flags: [
-      {
-        name: "project",
-        type: "string",
-        required: false,
-        brief: "Project GID",
-      },
       {
         name: "dry-run",
         type: "boolean",
@@ -836,11 +915,31 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.add-tag": {
+  "tasks.tags.list": {
+    brief: "List tags on a task",
+    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+    flags: [
+      {
+        name: "fields",
+        type: "string",
+        required: false,
+        brief: "Comma-separated field names to return (overrides defaults)",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.tags.add": {
     brief: "Add a tag to a task",
-    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "tag-gid", type: "string", brief: "Tag GID" },
+    ],
     flags: [
-      { name: "tag", type: "string", required: false, brief: "Tag GID" },
       {
         name: "dry-run",
         type: "boolean",
@@ -855,11 +954,13 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.remove-tag": {
+  "tasks.tags.remove": {
     brief: "Remove a tag from a task",
-    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+    positional: [
+      { name: "task-gid", type: "string", brief: "Task GID" },
+      { name: "tag-gid", type: "string", brief: "Tag GID" },
+    ],
     flags: [
-      { name: "tag", type: "string", required: false, brief: "Tag GID" },
       {
         name: "dry-run",
         type: "boolean",

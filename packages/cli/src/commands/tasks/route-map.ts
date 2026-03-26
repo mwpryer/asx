@@ -1,21 +1,19 @@
 import { buildRouteMap } from "@stricli/core";
 
-import { addProjectCommand } from "@/commands/tasks/add-project";
-import { addTagCommand } from "@/commands/tasks/add-tag";
-import { commentsCommand } from "@/commands/tasks/comments";
+import { commentsRouteMap } from "@/commands/tasks/comments/route-map";
 import { completeCommand } from "@/commands/tasks/complete";
 import { createCommand } from "@/commands/tasks/create";
 import { deleteCommand } from "@/commands/tasks/delete";
-import { dependenciesCommand } from "@/commands/tasks/dependencies";
+import { dependenciesRouteMap } from "@/commands/tasks/dependencies/route-map";
 import { duplicateCommand } from "@/commands/tasks/duplicate";
-import { followersCommand } from "@/commands/tasks/followers";
+import { followersRouteMap } from "@/commands/tasks/followers/route-map";
 import { getCommand } from "@/commands/tasks/get";
 import { listCommand } from "@/commands/tasks/list";
-import { removeProjectCommand } from "@/commands/tasks/remove-project";
-import { removeTagCommand } from "@/commands/tasks/remove-tag";
+import { projectsRouteMap } from "@/commands/tasks/projects/route-map";
 import { searchCommand } from "@/commands/tasks/search";
-import { storiesCommand } from "@/commands/tasks/stories";
+import { storiesRouteMap } from "@/commands/tasks/stories/route-map";
 import { subtasksCommand } from "@/commands/tasks/subtasks";
+import { tagsRouteMap } from "@/commands/tasks/tags/route-map";
 import { updateCommand } from "@/commands/tasks/update";
 
 export const tasksRouteMap = buildRouteMap({
@@ -27,16 +25,14 @@ export const tasksRouteMap = buildRouteMap({
     update: updateCommand,
     complete: completeCommand,
     delete: deleteCommand,
-    comments: commentsCommand,
-    stories: storiesCommand,
-    subtasks: subtasksCommand,
-    dependencies: dependenciesCommand,
-    followers: followersCommand,
-    "add-project": addProjectCommand,
-    "remove-project": removeProjectCommand,
-    "add-tag": addTagCommand,
-    "remove-tag": removeTagCommand,
     duplicate: duplicateCommand,
+    comments: commentsRouteMap,
+    stories: storiesRouteMap,
+    subtasks: subtasksCommand,
+    dependencies: dependenciesRouteMap,
+    followers: followersRouteMap,
+    projects: projectsRouteMap,
+    tags: tagsRouteMap,
   },
   docs: { brief: "Manage Asana tasks" },
 });

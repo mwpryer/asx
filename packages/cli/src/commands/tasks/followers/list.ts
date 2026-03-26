@@ -10,17 +10,13 @@ import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
-  resolveLimit,
   fieldsFlag,
-  paginationFlags,
-  paginationMeta,
   type AccountFlag,
   type FieldsFlag,
-  type PaginationFlags,
 } from "@/flags";
 
-export const storiesCommand = buildCommand({
-  docs: { brief: "List all stories on a task" },
+export const listCommand = buildCommand({
+  docs: { brief: "List followers of a task" },
   parameters: {
     positional: {
       kind: "tuple",
@@ -29,39 +25,33 @@ export const storiesCommand = buildCommand({
       ],
     },
     flags: {
-      ...paginationFlags,
       account: accountFlag,
       fields: fieldsFlag,
     },
   },
   func: asxFunc(async function (
     this: AsxCliContext,
-    flags: AccountFlag & FieldsFlag & PaginationFlags,
+    flags: AccountFlag & FieldsFlag,
     taskGid: string,
   ) {
     validateGid(taskGid, "task-gid");
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/tasks/${taskGid}/stories`,
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
-      },
+    const res = await client.request<{
+      followers?: Array<Record<string, unknown>>;
+    }>({
+      path: `/tasks/${taskGid}`,
       optFields: flags.fields?.split(",") ?? [
-        "text",
-        "created_by.name",
-        "created_at",
-        "type",
-        "resource_subtype",
+        "followers.name",
+        "followers.email",
       ],
     });
 
     this.process.stdout.write(
       formatJSON(
-        { stories: res.data },
-        { command: "tasks.stories", pagination: paginationMeta(res) },
+        { followers: res.data.followers ?? [] },
+        { command: "tasks.followers.list" },
       ) + "\n",
     );
   }),

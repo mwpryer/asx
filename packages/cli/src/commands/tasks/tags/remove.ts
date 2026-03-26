@@ -2,7 +2,6 @@ import { buildCommand } from "@stricli/core";
 
 import {
   AsanaClient,
-  InputError,
   formatJSON,
   hint,
   resolvePat,
@@ -17,53 +16,38 @@ import {
   type DryRunFlag,
 } from "@/flags";
 
-export const addTagCommand = buildCommand({
-  docs: { brief: "Add a tag to a task" },
+export const removeCommand = buildCommand({
+  docs: { brief: "Remove a tag from a task" },
   parameters: {
     positional: {
       kind: "tuple",
       parameters: [
         { brief: "Task GID", placeholder: "task-gid", parse: String },
+        { brief: "Tag GID", placeholder: "tag-gid", parse: String },
       ],
     },
     flags: {
-      tag: {
-        kind: "parsed",
-        brief: "Tag GID",
-        parse: String,
-        optional: true,
-      },
       account: accountFlag,
       dryRun: dryRunFlag,
     },
   },
   func: asxFunc(async function (
     this: AsxCliContext,
-    flags: AccountFlag &
-      DryRunFlag & {
-        tag: string | undefined;
-      },
+    flags: AccountFlag & DryRunFlag,
     taskGid: string,
+    tagGid: string,
   ) {
     validateGid(taskGid, "task-gid");
+    validateGid(tagGid, "tag-gid");
 
-    if (!flags.tag) {
-      throw new InputError(
-        "INPUT_MISSING",
-        "--tag is required",
-        "Pass --tag <gid>",
-      );
-    }
-    validateGid(flags.tag, "tag");
-
-    const path = `/tasks/${taskGid}/addTag`;
-    const body = { tag: flags.tag };
+    const path = `/tasks/${taskGid}/removeTag`;
+    const body = { tag: tagGid };
 
     if (flags.dryRun) {
       this.process.stdout.write(
         formatJSON(
           { method: "POST", path, body },
-          { command: "tasks.add-tag", dry_run: true },
+          { command: "tasks.tags.remove", dry_run: true },
         ) + "\n",
       );
       return;
@@ -78,8 +62,8 @@ export const addTagCommand = buildCommand({
     });
 
     this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.add-tag" }) + "\n",
+      formatJSON({ task: res.data }, { command: "tasks.tags.remove" }) + "\n",
     );
-    hint(`Tag ${flags.tag} added to task ${taskGid}`);
+    hint(`Tag ${tagGid} removed from task ${taskGid}`);
   }),
 });
