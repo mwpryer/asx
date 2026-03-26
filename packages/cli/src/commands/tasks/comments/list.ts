@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -38,31 +38,31 @@ export const listCommand = buildCommand({
   ) {
     v.parse(s.gid("task-gid"), taskGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request<Array<{ resource_subtype?: string }>>({
-      path: `/tasks/${taskGid}/stories`,
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
+    await exec<Array<{ resource_subtype?: string }>>({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/tasks/${taskGid}/stories`,
+        query: {
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
+        },
+        optFields: parseFields(flags.fields, [
+          "text",
+          "created_by.name",
+          "created_at",
+          "resource_subtype",
+        ]),
       },
-      optFields: parseFields(flags.fields, [
-        "text",
-        "created_by.name",
-        "created_at",
-        "resource_subtype",
-      ]),
+      format: (res) => ({
+        data: {
+          comments: res.data.filter(
+            (s) => s.resource_subtype === "comment_added",
+          ),
+        },
+        pagination: paginationMeta(res),
+      }),
+      command: "tasks.comments.list",
     });
-
-    const comments = res.data.filter(
-      (s) => s.resource_subtype === "comment_added",
-    );
-
-    this.process.stdout.write(
-      formatJSON(
-        { comments },
-        { command: "tasks.comments.list", pagination: paginationMeta(res) },
-      ) + "\n",
-    );
   }),
 });

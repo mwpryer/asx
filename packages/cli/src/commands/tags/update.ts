@@ -1,16 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  PALETTE_COLOURS,
-  formatJSON,
-  hint,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, PALETTE_COLOURS, hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -116,33 +108,28 @@ export const updateCommand = buildCommand({
     const path = `/tags/${tagGid}`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "PUT", path, body },
-          { command: "tags.update", dry_run: true },
-        ) + "\n",
-      );
+      preview({ ctx: this, command: "tags.update", method: "PUT", path, body });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "PUT",
-      path,
-      body,
-      optFields: parseFields(flags.fields, [
-        "name",
-        "gid",
-        "color",
-        "notes",
-        "permalink_url",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "PUT",
+        path,
+        body,
+        optFields: parseFields(flags.fields, [
+          "name",
+          "gid",
+          "color",
+          "notes",
+          "permalink_url",
+        ]),
+      },
+      format: (res) => ({ data: { tag: res.data } }),
+      command: "tags.update",
     });
-
-    this.process.stdout.write(
-      formatJSON({ tag: res.data }, { command: "tags.update" }) + "\n",
-    );
     hint(`Tag ${tagGid} updated`);
   }),
 });

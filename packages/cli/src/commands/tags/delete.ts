@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, hint, resolvePat, s } from "@mwp13/asx-core";
+import { hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -33,26 +33,20 @@ export const deleteCommand = buildCommand({
     const path = `/tags/${tagGid}`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "DELETE", path },
-          { command: "tags.delete", dry_run: true },
-        ) + "\n",
-      );
+      preview({ ctx: this, command: "tags.delete", method: "DELETE", path });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    await client.request({
-      method: "DELETE",
-      path,
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "DELETE",
+        path,
+      },
+      format: () => ({ data: { deleted: true, gid: tagGid } }),
+      command: "tags.delete",
     });
-
-    this.process.stdout.write(
-      formatJSON({ deleted: true, gid: tagGid }, { command: "tags.delete" }) +
-        "\n",
-    );
     hint(`Tag ${tagGid} deleted`);
   }),
 });

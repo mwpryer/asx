@@ -1,17 +1,14 @@
 import {
-  AsanaClient,
   InputError,
   PALETTE_COLOURS,
-  formatJSON,
   hint,
   resolveAuth,
-  resolvePat,
   s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -129,27 +126,28 @@ export const createCommand = buildCommand({
       : "/workspaces/{workspace_gid}/tags";
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "tags.create", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tags.create",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-      optFields: parseFields(flags.fields, ["name", "gid", "permalink_url"]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "POST",
+        path,
+        body,
+        optFields: parseFields(flags.fields, ["name", "gid", "permalink_url"]),
+      },
+      format: (res) => ({ data: { tag: res.data } }),
+      command: "tags.create",
     });
-
-    this.process.stdout.write(
-      formatJSON({ tag: res.data }, { command: "tags.create" }) + "\n",
-    );
-    hint(`Tag created: ${(res.data as Record<string, unknown>)?.["gid"]}`);
+    hint("Tag created");
   }),
 });

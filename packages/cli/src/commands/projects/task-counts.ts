@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -33,22 +33,21 @@ export const taskCountsCommand = buildCommand({
   ) {
     v.parse(s.gid("project-gid"), projectGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/projects/${projectGid}/task_counts`,
-      optFields: parseFields(flags.fields, [
-        "num_tasks",
-        "num_incomplete_tasks",
-        "num_completed_tasks",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/projects/${projectGid}/task_counts`,
+        optFields: parseFields(flags.fields, [
+          "num_tasks",
+          "num_incomplete_tasks",
+          "num_completed_tasks",
+        ]),
+      },
+      format: (res) => ({
+        data: { task_counts: res.data },
+      }),
+      command: "projects.task-counts",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { task_counts: res.data },
-        { command: "projects.task-counts" },
-      ) + "\n",
-    );
   }),
 });

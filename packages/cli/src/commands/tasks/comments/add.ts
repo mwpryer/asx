@@ -1,15 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  hint,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -83,30 +76,32 @@ export const addCommand = buildCommand({
     const path = `/tasks/${taskGid}/stories`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "tasks.comments.add", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tasks.comments.add",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-      optFields: parseFields(flags.fields, [
-        "text",
-        "created_by.name",
-        "created_at",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "POST",
+        path,
+        body,
+        optFields: parseFields(flags.fields, [
+          "text",
+          "created_by.name",
+          "created_at",
+        ]),
+      },
+      format: (res) => ({ data: { story: res.data } }),
+      command: "tasks.comments.add",
     });
-    this.process.stdout.write(
-      formatJSON({ story: res.data }, { command: "tasks.comments.add" }) + "\n",
-    );
     hint(`Comment added to task ${taskGid}`);
   }),
 });

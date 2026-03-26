@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, hint, resolvePat, s } from "@mwp13/asx-core";
+import { hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -39,22 +39,23 @@ export const addCommand = buildCommand({
     const body = { followers: [userGid] };
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "tasks.followers.add", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tasks.followers.add",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    await client.request({ method: "POST", path, body });
-
-    this.process.stdout.write(
-      formatJSON({ followers: {} }, { command: "tasks.followers.add" }) + "\n",
-    );
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: { method: "POST", path, body },
+      format: () => ({ data: { followers: {} } }),
+      command: "tasks.followers.add",
+    });
     hint(`Follower ${userGid} added to task ${taskGid}`);
   }),
 });

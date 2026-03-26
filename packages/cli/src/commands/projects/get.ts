@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -33,30 +33,30 @@ export const getCommand = buildCommand({
   ) {
     v.parse(s.gid("project-gid"), projectGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/projects/${projectGid}`,
-      optFields: parseFields(flags.fields, [
-        "name",
-        "archived",
-        "color",
-        "notes",
-        "owner.name",
-        "workspace.name",
-        "team.name",
-        "due_on",
-        "start_on",
-        "default_view",
-        "privacy_setting",
-        "permalink_url",
-        "created_at",
-        "modified_at",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/projects/${projectGid}`,
+        optFields: parseFields(flags.fields, [
+          "name",
+          "archived",
+          "color",
+          "notes",
+          "owner.name",
+          "workspace.name",
+          "team.name",
+          "due_on",
+          "start_on",
+          "default_view",
+          "privacy_setting",
+          "permalink_url",
+          "created_at",
+          "modified_at",
+        ]),
+      },
+      format: (res) => ({ data: { project: res.data } }),
+      command: "projects.get",
     });
-
-    this.process.stdout.write(
-      formatJSON({ project: res.data }, { command: "projects.get" }) + "\n",
-    );
   }),
 });

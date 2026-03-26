@@ -1,15 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  hint,
-  resolveAuth,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, hint, resolveAuth, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -136,35 +129,33 @@ export const createCommand = buildCommand({
     const path = `/workspaces/${workspace}/custom_fields`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "custom-fields.create", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "custom-fields.create",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const auth = resolveAuth({ account: flags.account });
-    const client = new AsanaClient({ pat: auth.pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-      optFields: parseFields(flags.fields, [
-        "gid",
-        "name",
-        "resource_subtype",
-        "type",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "POST",
+        path,
+        body,
+        optFields: parseFields(flags.fields, [
+          "gid",
+          "name",
+          "resource_subtype",
+          "type",
+        ]),
+      },
+      format: (res) => ({ data: { custom_field: res.data } }),
+      command: "custom-fields.create",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { custom_field: res.data },
-        { command: "custom-fields.create" },
-      ) + "\n",
-    );
     hint("Custom field created");
   }),
 });

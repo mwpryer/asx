@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -37,19 +37,19 @@ export const getCommand = buildCommand({
   ) {
     v.parse(s.gid("workspace-gid"), workspaceGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/workspaces/${workspaceGid}`,
-      optFields: parseFields(flags.fields, [
-        "name",
-        "is_organization",
-        "email_domains",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/workspaces/${workspaceGid}`,
+        optFields: parseFields(flags.fields, [
+          "name",
+          "is_organization",
+          "email_domains",
+        ]),
+      },
+      format: (res) => ({ data: { workspace: res.data } }),
+      command: "workspaces.get",
     });
-
-    this.process.stdout.write(
-      formatJSON({ workspace: res.data }, { command: "workspaces.get" }) + "\n",
-    );
   }),
 });

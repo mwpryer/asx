@@ -1,15 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  hint,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -92,27 +85,28 @@ export const updateCommand = buildCommand({
     const path = `/sections/${sectionGid}`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "PUT", path, body },
-          { command: "sections.update", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "sections.update",
+        method: "PUT",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "PUT",
-      path,
-      body,
-      optFields: parseFields(flags.fields, ["name", "gid"]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "PUT",
+        path,
+        body,
+        optFields: parseFields(flags.fields, ["name", "gid"]),
+      },
+      format: (res) => ({ data: { section: res.data } }),
+      command: "sections.update",
     });
-
-    this.process.stdout.write(
-      formatJSON({ section: res.data }, { command: "sections.update" }) + "\n",
-    );
     hint(`Section ${sectionGid} updated`);
   }),
 });

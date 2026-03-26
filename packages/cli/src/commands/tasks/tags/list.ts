@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -33,20 +33,19 @@ export const listCommand = buildCommand({
   ) {
     v.parse(s.gid("task-gid"), taskGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request<{
+    await exec<{
       tags?: Array<Record<string, unknown>>;
     }>({
-      path: `/tasks/${taskGid}`,
-      optFields: parseFields(flags.fields, ["tags.name"]),
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/tasks/${taskGid}`,
+        optFields: parseFields(flags.fields, ["tags.name"]),
+      },
+      format: (res) => ({
+        data: { tags: res.data.tags ?? [] },
+      }),
+      command: "tasks.tags.list",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { tags: res.data.tags ?? [] },
-        { command: "tasks.tags.list" },
-      ) + "\n",
-    );
   }),
 });

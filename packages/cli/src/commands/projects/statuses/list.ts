@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -38,31 +38,28 @@ export const listCommand = buildCommand({
   ) {
     v.parse(s.gid("project-gid"), projectGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/projects/${projectGid}/project_statuses`,
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
-      },
-      optFields: parseFields(flags.fields, [
-        "title",
-        "color",
-        "text",
-        "created_by.name",
-        "created_at",
-      ]),
-    });
-
-    this.process.stdout.write(
-      formatJSON(
-        { statuses: res.data },
-        {
-          command: "projects.statuses.list",
-          pagination: paginationMeta(res),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/projects/${projectGid}/project_statuses`,
+        query: {
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
         },
-      ) + "\n",
-    );
+        optFields: parseFields(flags.fields, [
+          "title",
+          "color",
+          "text",
+          "created_by.name",
+          "created_at",
+        ]),
+      },
+      format: (res) => ({
+        data: { statuses: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "projects.statuses.list",
+    });
   }),
 });

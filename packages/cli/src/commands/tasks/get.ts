@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -33,33 +33,33 @@ export const getCommand = buildCommand({
   ) {
     v.parse(s.gid("task-gid"), taskGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/tasks/${taskGid}`,
-      optFields: parseFields(flags.fields, [
-        "name",
-        "resource_subtype",
-        "completed",
-        "completed_at",
-        "assignee.name",
-        "due_on",
-        "start_on",
-        "notes",
-        "num_subtasks",
-        "projects.name",
-        "tags.name",
-        "parent.name",
-        "custom_fields.name",
-        "custom_fields.display_value",
-        "permalink_url",
-        "created_at",
-        "modified_at",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/tasks/${taskGid}`,
+        optFields: parseFields(flags.fields, [
+          "name",
+          "resource_subtype",
+          "completed",
+          "completed_at",
+          "assignee.name",
+          "due_on",
+          "start_on",
+          "notes",
+          "num_subtasks",
+          "projects.name",
+          "tags.name",
+          "parent.name",
+          "custom_fields.name",
+          "custom_fields.display_value",
+          "permalink_url",
+          "created_at",
+          "modified_at",
+        ]),
+      },
+      format: (res) => ({ data: { task: res.data } }),
+      command: "tasks.get",
     });
-
-    this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.get" }) + "\n",
-    );
   }),
 });

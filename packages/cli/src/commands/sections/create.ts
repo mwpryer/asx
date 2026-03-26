@@ -1,15 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  hint,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -96,12 +89,13 @@ export const createCommand = buildCommand({
     const path = projectGid ? `/projects/${projectGid}/sections` : "/sections";
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "sections.create", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "sections.create",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
@@ -113,18 +107,18 @@ export const createCommand = buildCommand({
       );
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-      optFields: parseFields(flags.fields, ["name", "gid"]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "POST",
+        path,
+        body,
+        optFields: parseFields(flags.fields, ["name", "gid"]),
+      },
+      format: (res) => ({ data: { section: res.data } }),
+      command: "sections.create",
     });
-
-    this.process.stdout.write(
-      formatJSON({ section: res.data }, { command: "sections.create" }) + "\n",
-    );
     hint(`Section created in project ${projectGid}`);
   }),
 });

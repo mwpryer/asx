@@ -1,7 +1,6 @@
-import { AsanaClient, formatJSON, resolvePat } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -29,22 +28,22 @@ export const listCommand = buildCommand({
     this: AsxCliContext,
     flags: AccountFlag & FieldsFlag & PaginationFlags,
   ) {
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: "/workspaces",
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: "/workspaces",
+        query: {
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
+        },
+        optFields: parseFields(flags.fields, ["name", "is_organization"]),
       },
-      optFields: parseFields(flags.fields, ["name", "is_organization"]),
+      format: (res) => ({
+        data: { workspaces: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "workspaces.list",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { workspaces: res.data },
-        { command: "workspaces.list", pagination: paginationMeta(res) },
-      ) + "\n",
-    );
   }),
 });

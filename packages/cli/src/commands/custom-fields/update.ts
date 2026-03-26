@@ -1,15 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  hint,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -109,36 +102,34 @@ export const updateCommand = buildCommand({
     const path = `/custom_fields/${customFieldGid}`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "PUT", path, body },
-          { command: "custom-fields.update", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "custom-fields.update",
+        method: "PUT",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "PUT",
-      path,
-      body,
-      optFields: parseFields(flags.fields, [
-        "gid",
-        "name",
-        "resource_subtype",
-        "type",
-        "description",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "PUT",
+        path,
+        body,
+        optFields: parseFields(flags.fields, [
+          "gid",
+          "name",
+          "resource_subtype",
+          "type",
+          "description",
+        ]),
+      },
+      format: (res) => ({ data: { custom_field: res.data } }),
+      command: "custom-fields.update",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { custom_field: res.data },
-        { command: "custom-fields.update" },
-      ) + "\n",
-    );
     hint(`Custom field ${customFieldGid} updated`);
   }),
 });

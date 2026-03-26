@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  resolveAuth,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, resolveAuth, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -56,25 +50,26 @@ export const listCommand = buildCommand({
       );
     }
 
-    const client = new AsanaClient({ pat: auth.pat });
-    const res = await client.request({
-      path: `/workspaces/${workspace}/custom_fields`,
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/workspaces/${workspace}/custom_fields`,
+        query: {
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
+        },
+        optFields: parseFields(flags.fields, [
+          "name",
+          "resource_subtype",
+          "type",
+        ]),
       },
-      optFields: parseFields(flags.fields, [
-        "name",
-        "resource_subtype",
-        "type",
-      ]),
+      format: (res) => ({
+        data: { custom_fields: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "custom-fields.list",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { custom_fields: res.data },
-        { command: "custom-fields.list", pagination: paginationMeta(res) },
-      ) + "\n",
-    );
   }),
 });

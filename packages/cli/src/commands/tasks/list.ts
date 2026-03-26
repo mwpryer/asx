@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -75,28 +69,28 @@ export const listCommand = buildCommand({
       ? `/projects/${flags.project}/tasks`
       : `/sections/${flags.section}/tasks`;
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path,
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path,
+        query: {
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
+        },
+        optFields: parseFields(flags.fields, [
+          "name",
+          "completed",
+          "assignee.name",
+          "due_on",
+          "modified_at",
+        ]),
       },
-      optFields: parseFields(flags.fields, [
-        "name",
-        "completed",
-        "assignee.name",
-        "due_on",
-        "modified_at",
-      ]),
+      format: (res) => ({
+        data: { tasks: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "tasks.list",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { tasks: res.data },
-        { command: "tasks.list", pagination: paginationMeta(res) },
-      ) + "\n",
-    );
   }),
 });

@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  TEAM_FIELDS,
-  formatJSON,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { TEAM_FIELDS, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -39,15 +33,15 @@ export const getCommand = buildCommand({
   ) {
     v.parse(s.gid("team-gid"), teamGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/teams/${teamGid}`,
-      optFields: parseFields(flags.fields, [...TEAM_FIELDS]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/teams/${teamGid}`,
+        optFields: parseFields(flags.fields, [...TEAM_FIELDS]),
+      },
+      format: (res) => ({ data: { team: res.data } }),
+      command: "teams.get",
     });
-
-    this.process.stdout.write(
-      formatJSON({ team: res.data }, { command: "teams.get" }) + "\n",
-    );
   }),
 });

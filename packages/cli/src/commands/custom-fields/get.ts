@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -37,28 +37,27 @@ export const getCommand = buildCommand({
   ) {
     v.parse(s.gid("custom-field-gid"), customFieldGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/custom_fields/${customFieldGid}`,
-      optFields: parseFields(flags.fields, [
-        "name",
-        "resource_subtype",
-        "type",
-        "description",
-        "format",
-        "enum_options",
-        "enum_options.name",
-        "enum_options.enabled",
-        "enum_options.color",
-        "precision",
-        "is_formula_field",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/custom_fields/${customFieldGid}`,
+        optFields: parseFields(flags.fields, [
+          "name",
+          "resource_subtype",
+          "type",
+          "description",
+          "format",
+          "enum_options",
+          "enum_options.name",
+          "enum_options.enabled",
+          "enum_options.color",
+          "precision",
+          "is_formula_field",
+        ]),
+      },
+      format: (res) => ({ data: { custom_field: res.data } }),
+      command: "custom-fields.get",
     });
-
-    this.process.stdout.write(
-      formatJSON({ custom_field: res.data }, { command: "custom-fields.get" }) +
-        "\n",
-    );
   }),
 });

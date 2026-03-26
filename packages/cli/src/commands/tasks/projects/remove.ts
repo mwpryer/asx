@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, hint, resolvePat, s } from "@mwp13/asx-core";
+import { hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -39,27 +39,23 @@ export const removeCommand = buildCommand({
     const body = { project: projectGid };
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "tasks.projects.remove", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tasks.projects.remove",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: { method: "POST", path, body },
+      format: (res) => ({ data: { task: res.data } }),
+      command: "tasks.projects.remove",
     });
-
-    this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.projects.remove" }) +
-        "\n",
-    );
     hint(`Task ${taskGid} removed from project ${projectGid}`);
   }),
 });

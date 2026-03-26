@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  resolveAuth,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, resolveAuth, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -79,30 +73,31 @@ export const listCommand = buildCommand({
       path = `/workspaces/${workspace}/projects`;
     }
 
-    const client = new AsanaClient({ pat: auth.pat });
-    const res = await client.request({
-      path,
-      query: {
-        archived: flags.archived,
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path,
+        query: {
+          archived: flags.archived,
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
+        },
+        optFields: parseFields(flags.fields, [
+          "name",
+          "archived",
+          "color",
+          "owner.name",
+          "due_on",
+          "modified_at",
+          "team.name",
+        ]),
       },
-      optFields: parseFields(flags.fields, [
-        "name",
-        "archived",
-        "color",
-        "owner.name",
-        "due_on",
-        "modified_at",
-        "team.name",
-      ]),
+      format: (res) => ({
+        data: { projects: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "projects.list",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { projects: res.data },
-        { command: "projects.list", pagination: paginationMeta(res) },
-      ) + "\n",
-    );
   }),
 });

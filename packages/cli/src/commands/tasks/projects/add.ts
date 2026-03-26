@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, hint, resolvePat, s } from "@mwp13/asx-core";
+import { hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -47,26 +47,23 @@ export const addCommand = buildCommand({
     if (flags.section) body["section"] = flags.section;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "tasks.projects.add", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tasks.projects.add",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: { method: "POST", path, body },
+      format: (res) => ({ data: { task: res.data } }),
+      command: "tasks.projects.add",
     });
-
-    this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.projects.add" }) + "\n",
-    );
     hint(`Task ${taskGid} added to project ${projectGid}`);
   }),
 });

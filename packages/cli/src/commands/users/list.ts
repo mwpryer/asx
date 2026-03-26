@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  resolveAuth,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, resolveAuth, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -56,21 +50,22 @@ export const listCommand = buildCommand({
       );
     }
 
-    const client = new AsanaClient({ pat: auth.pat });
-    const res = await client.request({
-      path: `/workspaces/${workspace}/users`,
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/workspaces/${workspace}/users`,
+        query: {
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
+        },
+        optFields: parseFields(flags.fields, ["name", "email"]),
       },
-      optFields: parseFields(flags.fields, ["name", "email"]),
+      format: (res) => ({
+        data: { users: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "users.list",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { users: res.data },
-        { command: "users.list", pagination: paginationMeta(res) },
-      ) + "\n",
-    );
   }),
 });

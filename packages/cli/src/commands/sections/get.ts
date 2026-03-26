@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  SECTION_FIELDS,
-  formatJSON,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { SECTION_FIELDS, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -39,15 +33,15 @@ export const getCommand = buildCommand({
   ) {
     v.parse(s.gid("section-gid"), sectionGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/sections/${sectionGid}`,
-      optFields: parseFields(flags.fields, [...SECTION_FIELDS]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/sections/${sectionGid}`,
+        optFields: parseFields(flags.fields, [...SECTION_FIELDS]),
+      },
+      format: (res) => ({ data: { section: res.data } }),
+      command: "sections.get",
     });
-
-    this.process.stdout.write(
-      formatJSON({ section: res.data }, { command: "sections.get" }) + "\n",
-    );
   }),
 });

@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  resolveAuth,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, resolveAuth, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -149,7 +143,6 @@ export const searchCommand = buildCommand({
         "Pass --workspace or set a default with `asx auth add <alias> --workspace <gid>`",
       );
     }
-    const client = new AsanaClient({ pat: auth.pat });
     const params: Record<string, string | number | boolean | undefined> = {
       text: query,
       limit: resolveLimit(flags),
@@ -166,23 +159,25 @@ export const searchCommand = buildCommand({
     if (flags.sortBy) params["sort_by"] = flags.sortBy;
     if (flags.sortBy) params["sort_ascending"] = flags.sortAscending;
 
-    const res = await client.request({
-      path: `/workspaces/${workspace}/tasks/search`,
-      query: params,
-      optFields: parseFields(flags.fields, [
-        "name",
-        "completed",
-        "assignee.name",
-        "due_on",
-        "modified_at",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/workspaces/${workspace}/tasks/search`,
+        query: params,
+        optFields: parseFields(flags.fields, [
+          "name",
+          "completed",
+          "assignee.name",
+          "due_on",
+          "modified_at",
+        ]),
+      },
+      format: (res) => ({
+        data: { tasks: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "tasks.search",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { tasks: res.data },
-        { command: "tasks.search", pagination: paginationMeta(res) },
-      ) + "\n",
-    );
   }),
 });

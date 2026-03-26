@@ -1,14 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -135,34 +129,35 @@ export const updateCommand = buildCommand({
     const path = `/tasks/${taskGid}`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "PUT", path, body },
-          { command: "tasks.update", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tasks.update",
+        method: "PUT",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "PUT",
-      path,
-      body,
-      optFields: parseFields(flags.fields, [
-        "name",
-        "gid",
-        "completed",
-        "assignee.name",
-        "due_on",
-        "notes",
-        "permalink_url",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "PUT",
+        path,
+        body,
+        optFields: parseFields(flags.fields, [
+          "name",
+          "gid",
+          "completed",
+          "assignee.name",
+          "due_on",
+          "notes",
+          "permalink_url",
+        ]),
+      },
+      format: (res) => ({ data: { task: res.data } }),
+      command: "tasks.update",
     });
-
-    this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.update" }) + "\n",
-    );
   }),
 });

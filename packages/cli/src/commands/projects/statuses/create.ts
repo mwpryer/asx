@@ -1,16 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  STATUS_COLOURS,
-  formatJSON,
-  hint,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, STATUS_COLOURS, hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -111,37 +103,35 @@ export const createCommand = buildCommand({
     const path = `/projects/${projectGid}/project_statuses`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "projects.statuses.create", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "projects.statuses.create",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-      optFields: parseFields(flags.fields, [
-        "gid",
-        "title",
-        "color",
-        "text",
-        "created_by.name",
-        "created_at",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "POST",
+        path,
+        body,
+        optFields: parseFields(flags.fields, [
+          "gid",
+          "title",
+          "color",
+          "text",
+          "created_by.name",
+          "created_at",
+        ]),
+      },
+      format: (res) => ({ data: { status: res.data } }),
+      command: "projects.statuses.create",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { status: res.data },
-        { command: "projects.statuses.create" },
-      ) + "\n",
-    );
     hint(`Status update created for project ${projectGid}`);
   }),
 });

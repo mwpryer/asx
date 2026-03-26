@@ -4,6 +4,7 @@ import {
   AuthError,
   ApiError,
   InputError,
+  NetworkError,
   EXIT_AUTH,
   EXIT_API,
   EXIT_RATE_LIMITED,
@@ -102,5 +103,32 @@ describe("InputError", () => {
     const err = new InputError("INPUT_MISSING", "name is required");
     expect(err.code).toBe("INPUT_MISSING");
     expect(err.exitCode).toBe(EXIT_INPUT);
+  });
+});
+
+describe("NetworkError", () => {
+  it("sets code API_ERROR and exitCode EXIT_API", () => {
+    const err = new NetworkError("fetch failed");
+    expect(err.code).toBe("API_ERROR");
+    expect(err.exitCode).toBe(EXIT_API);
+    expect(err.message).toBe("fetch failed");
+  });
+
+  it("toJSON includes suggestion when present", () => {
+    const err = new NetworkError("fetch failed", "Check your connection");
+    expect(err.toJSON()).toEqual({
+      error: {
+        code: "API_ERROR",
+        message: "fetch failed",
+        suggestion: "Check your connection",
+      },
+    });
+  });
+
+  it("toJSON omits suggestion when absent", () => {
+    const err = new NetworkError("timeout");
+    expect(err.toJSON()).toEqual({
+      error: { code: "API_ERROR", message: "timeout" },
+    });
   });
 });

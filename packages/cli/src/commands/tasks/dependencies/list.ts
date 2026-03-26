@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
+import { s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -38,30 +38,27 @@ export const listCommand = buildCommand({
   ) {
     v.parse(s.gid("task-gid"), taskGid);
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      path: `/tasks/${taskGid}/dependencies`,
-      query: {
-        limit: resolveLimit(flags),
-        ...(flags.offset && { offset: flags.offset }),
-      },
-      optFields: parseFields(flags.fields, [
-        "name",
-        "completed",
-        "assignee.name",
-        "due_on",
-      ]),
-    });
-
-    this.process.stdout.write(
-      formatJSON(
-        { dependencies: res.data },
-        {
-          command: "tasks.dependencies.list",
-          pagination: paginationMeta(res),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        path: `/tasks/${taskGid}/dependencies`,
+        query: {
+          limit: resolveLimit(flags),
+          ...(flags.offset && { offset: flags.offset }),
         },
-      ) + "\n",
-    );
+        optFields: parseFields(flags.fields, [
+          "name",
+          "completed",
+          "assignee.name",
+          "due_on",
+        ]),
+      },
+      format: (res) => ({
+        data: { dependencies: res.data },
+        pagination: paginationMeta(res),
+      }),
+      command: "tasks.dependencies.list",
+    });
   }),
 });

@@ -1,17 +1,14 @@
 import {
-  AsanaClient,
   InputError,
   PALETTE_COLOURS,
   PROJECT_VIEWS,
-  formatJSON,
   resolveAuth,
-  resolvePat,
   s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -167,26 +164,27 @@ export const createCommand = buildCommand({
     }
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path: "/projects", body },
-          { command: "projects.create", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "projects.create",
+        method: "POST",
+        path: "/projects",
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path: "/projects",
-      body,
-      optFields: parseFields(flags.fields, ["name", "gid", "permalink_url"]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "POST",
+        path: "/projects",
+        body,
+        optFields: parseFields(flags.fields, ["name", "gid", "permalink_url"]),
+      },
+      format: (res) => ({ data: { project: res.data } }),
+      command: "projects.create",
     });
-
-    this.process.stdout.write(
-      formatJSON({ project: res.data }, { command: "projects.create" }) + "\n",
-    );
   }),
 });

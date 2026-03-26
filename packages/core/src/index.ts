@@ -24,7 +24,7 @@ export { resolvePat, resolveAuth } from "@/auth/resolve";
 
 // Client
 export { AsanaClient } from "@/client/asana-client";
-export type { AsanaResponse } from "@/client/asana-client";
+export type { AsanaRequestOpts, AsanaResponse } from "@/client/asana-client";
 
 // Validation schemas
 export * as s from "@/validate/schemas";

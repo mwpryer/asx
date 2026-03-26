@@ -1,8 +1,8 @@
-import { AsanaClient, formatJSON, hint, resolvePat, s } from "@mwp13/asx-core";
+import { hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -43,29 +43,23 @@ export const removeCommand = buildCommand({
     const body = { dependencies: [depGid] };
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "tasks.dependencies.remove", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tasks.dependencies.remove",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: { method: "POST", path, body },
+      format: (res) => ({ data: { dependencies: res.data } }),
+      command: "tasks.dependencies.remove",
     });
-
-    this.process.stdout.write(
-      formatJSON(
-        { dependencies: res.data },
-        { command: "tasks.dependencies.remove" },
-      ) + "\n",
-    );
     hint(`Dependency ${depGid} removed from task ${taskGid}`);
   }),
 });

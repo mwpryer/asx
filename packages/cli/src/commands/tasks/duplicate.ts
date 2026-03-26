@@ -1,15 +1,8 @@
-import {
-  AsanaClient,
-  InputError,
-  formatJSON,
-  hint,
-  resolvePat,
-  s,
-} from "@mwp13/asx-core";
+import { InputError, hint, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 import * as v from "valibot";
 
-import { asxFunc } from "@/command";
+import { asxFunc, preview, exec } from "@/command";
 import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
@@ -85,31 +78,32 @@ export const duplicateCommand = buildCommand({
     const path = `/tasks/${taskGid}/duplicate`;
 
     if (flags.dryRun) {
-      this.process.stdout.write(
-        formatJSON(
-          { method: "POST", path, body },
-          { command: "tasks.duplicate", dry_run: true },
-        ) + "\n",
-      );
+      preview({
+        ctx: this,
+        command: "tasks.duplicate",
+        method: "POST",
+        path,
+        body,
+      });
       return;
     }
 
-    const pat = resolvePat({ account: flags.account });
-    const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-      optFields: parseFields(flags.fields, [
-        "new_task",
-        "new_task.name",
-        "new_task.permalink_url",
-      ]),
+    await exec({
+      ctx: this,
+      account: flags.account,
+      request: {
+        method: "POST",
+        path,
+        body,
+        optFields: parseFields(flags.fields, [
+          "new_task",
+          "new_task.name",
+          "new_task.permalink_url",
+        ]),
+      },
+      format: (res) => ({ data: { job: res.data } }),
+      command: "tasks.duplicate",
     });
-
-    this.process.stdout.write(
-      formatJSON({ job: res.data }, { command: "tasks.duplicate" }) + "\n",
-    );
     hint(`Task ${taskGid} duplicated`);
   }),
 });
