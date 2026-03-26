@@ -55,14 +55,10 @@ export const removeCommand = buildCommand({
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-    });
+    await client.request({ method: "POST", path, body });
 
     this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.followers.remove" }) +
+      formatJSON({ followers: {} }, { command: "tasks.followers.remove" }) +
         "\n",
     );
     hint(`Follower ${userGid} removed from task ${taskGid}`);

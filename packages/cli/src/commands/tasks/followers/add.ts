@@ -55,14 +55,10 @@ export const addCommand = buildCommand({
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
-    const res = await client.request({
-      method: "POST",
-      path,
-      body,
-    });
+    await client.request({ method: "POST", path, body });
 
     this.process.stdout.write(
-      formatJSON({ task: res.data }, { command: "tasks.followers.add" }) + "\n",
+      formatJSON({ followers: {} }, { command: "tasks.followers.add" }) + "\n",
     );
     hint(`Follower ${userGid} added to task ${taskGid}`);
   }),
