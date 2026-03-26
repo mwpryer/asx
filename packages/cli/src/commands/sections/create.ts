@@ -56,19 +56,18 @@ export const createCommand = buildCommand({
         project: string | undefined;
       },
   ) {
-    const hasValueFlags =
-      flags.name !== undefined || flags.project !== undefined;
-
-    if (flags.json && hasValueFlags) {
+    if (flags.json && flags.name !== undefined) {
       throw new InputError(
         "INPUT_INVALID",
-        "--json is mutually exclusive with value flags (--name, --project)",
+        "--json is mutually exclusive with value flags (--name)",
         "Use either --json or individual flags, not both",
       );
     }
 
+    if (flags.project) validateGid(flags.project, "project");
+    const projectGid: string | undefined = flags.project;
+
     let body: Record<string, unknown>;
-    let projectGid: string | undefined = flags.project;
 
     if (flags.json) {
       body = parseJsonInput(flags.json);
@@ -87,8 +86,6 @@ export const createCommand = buildCommand({
           "Provide --project <gid> to specify which project to add the section to",
         );
       }
-      validateGid(flags.project, "project");
-      projectGid = flags.project;
 
       const name = sanitizeText(flags.name, "name", 1024);
       if (!name) {

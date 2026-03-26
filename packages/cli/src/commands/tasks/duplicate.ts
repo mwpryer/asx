@@ -15,9 +15,12 @@ import {
   accountFlag,
   dryRunFlag,
   fieldsFlag,
+  jsonFlag,
+  parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
   type FieldsFlag,
+  type JsonFlag,
 } from "@/flags";
 
 export const duplicateCommand = buildCommand({
@@ -39,37 +42,53 @@ export const duplicateCommand = buildCommand({
       account: accountFlag,
       fields: fieldsFlag,
       dryRun: dryRunFlag,
+      json: jsonFlag,
     },
   },
   func: asxFunc(async function (
     this: AsxCliContext,
     flags: AccountFlag &
       FieldsFlag &
-      DryRunFlag & {
+      DryRunFlag &
+      JsonFlag & {
         name: string | undefined;
       },
     taskGid: string,
   ) {
     validateGid(taskGid, "task-gid");
 
-    if (!flags.name) {
-      throw new InputError(
-        "INPUT_MISSING",
-        "--name is required",
-        "Pass --name <name>",
-      );
-    }
-    const name = sanitizeText(flags.name, "name", 1024);
-    if (!name) {
+    if (flags.json && flags.name !== undefined) {
       throw new InputError(
         "INPUT_INVALID",
-        "Invalid name: must not be blank",
-        "Provide a non-empty --name",
+        "--json is mutually exclusive with value flags (--name)",
+        "Use either --json or individual flags, not both",
       );
     }
 
+    let body: Record<string, unknown>;
+
+    if (flags.json) {
+      body = parseJsonInput(flags.json);
+    } else {
+      if (!flags.name) {
+        throw new InputError(
+          "INPUT_MISSING",
+          "--name is required when not using --json",
+          "Pass --name <name> or use --json",
+        );
+      }
+      const name = sanitizeText(flags.name, "name", 1024);
+      if (!name) {
+        throw new InputError(
+          "INPUT_INVALID",
+          "Invalid name: must not be blank",
+          "Provide a non-empty --name",
+        );
+      }
+      body = { name };
+    }
+
     const path = `/tasks/${taskGid}/duplicate`;
-    const body = { name };
 
     if (flags.dryRun) {
       this.process.stdout.write(
@@ -97,6 +116,6 @@ export const duplicateCommand = buildCommand({
     this.process.stdout.write(
       formatJSON({ job: res.data }, { command: "tasks.duplicate" }) + "\n",
     );
-    hint(`Task ${taskGid} duplicated as "${flags.name}"`);
+    hint(`Task ${taskGid} duplicated`);
   }),
 });

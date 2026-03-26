@@ -73,13 +73,12 @@ export const createCommand = buildCommand({
     const hasValueFlags =
       flags.name !== undefined ||
       flags.color !== undefined ||
-      flags.notes !== undefined ||
-      flags.workspace !== undefined;
+      flags.notes !== undefined;
 
     if (flags.json && hasValueFlags) {
       throw new InputError(
         "INPUT_INVALID",
-        "--json is mutually exclusive with value flags (--name, --color, --notes, --workspace)",
+        "--json is mutually exclusive with value flags (--name, --color, --notes)",
         "Use either --json or individual flags, not both",
       );
     }
