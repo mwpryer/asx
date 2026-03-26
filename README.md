@@ -15,425 +15,176 @@ npm install -g @mwp13/asx
 > [!IMPORTANT]
 > This project is under active development. Expect breaking changes before v1.0.
 
-## Contents
-
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Authentication](#authentication)
-- [Commands](#commands)
-  - [describe](#asx-describe---schema-introspection)
-  - [auth](#asx-auth---manage-authentication-and-accounts)
-  - [tasks](#asx-tasks---manage-asana-tasks)
-  - [projects](#asx-projects---manage-asana-projects)
-  - [workspaces](#asx-workspaces---manage-asana-workspaces)
-  - [users](#asx-users---manage-asana-users)
-  - [custom-fields](#asx-custom-fields---manage-asana-custom-field-definitions)
-  - [tags](#asx-tags---manage-asana-tags)
-  - [sections](#asx-sections---manage-asana-sections)
-  - [teams](#asx-teams---manage-asana-teams)
-- [Output Format](#output-format)
-- [Agent Features](#agent-features)
-- [Agent Skill](#agent-skill)
-
-## Prerequisites
-
-- **Node.js 18+**
-- **An Asana account** with a [Personal Access Token](https://developers.asana.com/docs/personal-access-token) (PAT)
-
 ## Installation
+
+Requires **Node.js 18+** and an **Asana account** with a [Personal Access Token](https://developers.asana.com/docs/personal-access-token) (PAT).
 
 ```bash
 npm install -g @mwp13/asx
 ```
 
-Or with pnpm:
+Or try without installing:
 
 ```bash
-pnpm add -g @mwp13/asx
+npx @mwp13/asx --help
 ```
 
 ## Quick Start
 
 ```bash
-asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2... # store a PAT
-asx workspaces list # list your workspaces
+# store a PAT
+asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2...
+# with default workspace
+asx auth add work --pat ... --workspace 1209876543210987
+# list your workspaces
+asx workspaces list
 asx tasks search "launch prep" --workspace 1209876543210987
 asx tasks create --name "Write docs" --project 1201234567890123 --due 2026-01-01
 ```
 
-## Authentication
+Accounts are stored in `~/.config/asx/accounts.json` (respects `XDG_CONFIG_HOME`; Windows: `%LOCALAPPDATA%\asx\`) with file permissions `0600`. Uses `--account` flag if given, otherwise auto-selects when only one account is stored.
 
-asx uses Asana Personal Access Tokens (PATs). Store them with `asx auth add`.
+> **Default workspace:** If you pass `--workspace <workspace-gid>` when adding an account, that workspace is used automatically by commands that require `--workspace` (e.g. `tasks search`, `projects list`) so you can omit it.
 
-### Storing accounts
+## Agent Skill
+
+asx ships with an [agent skill](https://skills.sh) (`skills/asx/SKILL.md`) that gives AI coding agents full context on every command, flag, and workflow.
 
 ```bash
-asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2... # add an account
-asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2... --workspace 1209876543210987 # with default workspace
-asx auth list # list stored accounts
-asx auth status # show current user info
-asx auth remove work # remove an account
+npx skills add mwpryer/asx
 ```
-
-Accounts are stored in `~/.config/asx/accounts.json` (respects `XDG_CONFIG_HOME`; Windows: `%LOCALAPPDATA%\asx\`) with file permissions `0600`.
-
-> **Default workspace:** If you pass `--workspace <gid>` when adding an account, that workspace is used automatically by commands that require `--workspace` (e.g. `tasks search`, `projects list`) so you can omit it.
-
-### Resolution order
-
-| Priority | Source                | Set via                            |
-| -------- | --------------------- | ---------------------------------- |
-| 1        | `--account` flag      | Per-command override               |
-| 2        | Single stored account | Auto-selected when only one exists |
-
-If multiple accounts are stored and no `--account` flag is given, asx returns an error asking you to specify one.
 
 ## Commands
 
-Every command outputs structured JSON to stdout. Logs and hints go to stderr.
+API commands output structured JSON to stdout. Logs and hints go to stderr. Auth management commands (`add`, `remove`) only emit stderr hints.
+
+The CLI is self-documenting: run `asx describe` to discover commands, flags, and resource fields at runtime.
+
+```bash
+# list all commands and resource types
+asx describe
+# show flags, args, and types for a command
+asx describe tasks.create
+# show available fields for a resource type
+asx describe task
+```
+
+### Global flags
+
+| Flag           | Description                        |
+| -------------- | ---------------------------------- |
+| `-h --help`    | Print help information and exit    |
+| `-v --version` | Print version information and exit |
 
 ### Shared flags
 
 These flags appear on multiple commands:
 
-| Flag                | Applies to                                                                                 | Description                                                 |
-| ------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| `--account <alias>` | All commands that call the API                                                             | Account to use (see [Resolution order](#resolution-order))  |
-| `--fields <fields>` | All resource-returning commands (`tasks`, `projects`, `workspaces`, `custom-fields`, etc.) | Comma-separated field names to return (overrides defaults)  |
-| `--dry-run`         | Mutating commands (create, update, delete, duplicate, etc.)                                | Preview the request without sending it                      |
-| `--json <json>`     | Mutating commands that accept a body (`create`, `update`, `comments add`)                  | Raw JSON request body (mutually exclusive with value flags) |
+| Flag                | Applies to                                        | Description                                      |
+| ------------------- | ------------------------------------------------- | ------------------------------------------------ |
+| `--account <alias>` | All API commands                                  | Account to use                                   |
+| `--fields <fields>` | All resource-returning commands                   | Comma-separated field names to return            |
+| `--dry-run`         | All mutating commands                             | Preview the request without sending it           |
+| `--json <json>`     | Create, update, duplicate, complete, comments add | Raw JSON request body (replaces all value flags) |
 
-### `asx describe` - Schema introspection
+### `asx auth`
 
-| Command                   | Description                               |
-| ------------------------- | ----------------------------------------- |
-| `asx describe`            | List all commands and resource types      |
-| `asx describe <command>`  | Show command schema (flags, args, types)  |
-| `asx describe <resource>` | Show available fields for a resource type |
+| Command                                                            | Description                                                      |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `asx auth add <alias> --pat <token> [--workspace <workspace-gid>]` | Store a PAT under an alias (optionally with a default workspace) |
+| `asx auth list`                                                    | List stored accounts                                             |
+| `asx auth status [--account <alias>]`                              | Show current user info (name, email, workspaces)                 |
+| `asx auth remove <alias>`                                          | Remove a stored account                                          |
 
-```bash
-asx describe # list all commands and resource types
-asx describe tasks.create # show flags, args, and types for a command
-asx describe task # show available fields for a resource type
-```
+### `asx tasks`
 
-### `asx auth` - Manage authentication and accounts
+| Command                                        | Description                                      |
+| ---------------------------------------------- | ------------------------------------------------ |
+| `asx tasks search <query>`                     | Search tasks in a workspace                      |
+| `asx tasks list`                               | List tasks (requires `--project` or `--section`) |
+| `asx tasks get <task-gid>`                     | Get full task details                            |
+| `asx tasks create --name <name>`               | Create a new task                                |
+| `asx tasks update <task-gid>`                  | Update a task                                    |
+| `asx tasks complete <task-gid>`                | Mark a task as completed                         |
+| `asx tasks delete <task-gid>`                  | Delete a task                                    |
+| `asx tasks duplicate <task-gid> --name <name>` | Duplicate a task                                 |
+| `asx tasks subtasks [list\|create] <task-gid>` | List or create subtasks                          |
+| `asx tasks comments [list\|add] <task-gid>`    | List or add comments                             |
+| `asx tasks comments remove <story-gid>`        | Remove a comment (by story GID)                  |
+| `asx tasks stories [list] <task-gid>`          | List all stories on a task                       |
 
-| Command                                                  | Description                                                      |
-| -------------------------------------------------------- | ---------------------------------------------------------------- |
-| `asx auth add <alias> --pat <token> [--workspace <gid>]` | Store a PAT under an alias (optionally with a default workspace) |
-| `asx auth list`                                          | List stored accounts                                             |
-| `asx auth status [--account <alias>]`                    | Show current user info (name, email, workspaces)                 |
-| `asx auth remove <alias>`                                | Remove a stored account                                          |
-
-```bash
-asx auth add work --pat 1/1206789012345678:a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4 --workspace 1209876543210987
-asx auth status --account work
-```
-
-### `asx tasks` - Manage Asana tasks
-
-| Command                                         | Description                        |
-| ----------------------------------------------- | ---------------------------------- |
-| `asx tasks search <query>`                      | Search tasks in a workspace        |
-| `asx tasks list`                                | List tasks in a project or section |
-| `asx tasks get <gid>`                           | Get full task details              |
-| `asx tasks create --name <name>`                | Create a new task                  |
-| `asx tasks update <gid>`                        | Update a task                      |
-| `asx tasks complete <gid>`                      | Mark a task as completed           |
-| `asx tasks delete <gid>`                        | Delete a task                      |
-| `asx tasks duplicate <gid> --name <name>`       | Duplicate a task                   |
-| `asx tasks subtasks [list] <gid>`               | List subtasks of a task            |
-| `asx tasks subtasks create <gid> --name <name>` | Create a subtask                   |
-| `asx tasks comments [list] <gid>`               | List comments on a task            |
-| `asx tasks comments add <gid> --text <text>`    | Add a comment to a task            |
-| `asx tasks comments remove <story-gid>`         | Remove a comment                   |
-| `asx tasks stories [list] <gid>`                | List all stories on a task         |
-| `asx tasks dependencies [list] <gid>`           | List task dependencies             |
-| `asx tasks dependencies add <gid> <dep-gid>`    | Add a dependency                   |
-| `asx tasks dependencies remove <gid> <dep-gid>` | Remove a dependency                |
-| `asx tasks followers [list] <gid>`              | List task followers                |
-| `asx tasks followers add <gid> <user-gid>`      | Add a follower                     |
-| `asx tasks followers remove <gid> <user-gid>`   | Remove a follower                  |
-| `asx tasks projects [list] <gid>`               | List projects a task belongs to    |
-| `asx tasks projects add <gid> <project-gid>`    | Add a task to a project            |
-| `asx tasks projects remove <gid> <project-gid>` | Remove a task from a project       |
-| `asx tasks tags [list] <gid>`                   | List tags on a task                |
-| `asx tasks tags add <gid> <tag-gid>`            | Add a tag to a task                |
-| `asx tasks tags remove <gid> <tag-gid>`         | Remove a tag from a task           |
+Tasks also have `dependencies`, `followers`, `projects`, and `tags` sub-resources, each supporting `list`, `add`, and `remove` (e.g. `asx tasks dependencies add <task-gid> <dep-gid>`).
 
 `[list]` is the default subcommand and can be omitted.
 
 ```bash
 asx tasks search "bug" --workspace 1209876543210987 --assignee me --project 1201234567890123
 asx tasks list --project 1201234567890123
-asx tasks create --name "Fix login" --project 1201234567890123 --assignee me --due 2026-03-15 --notes "See ticket #42"
+asx tasks create --name "Fix login" --project 1201234567890123 --assignee me --due 2026-03-15
 asx tasks update 1205678901234567 --name "Fix login flow" --due 2026-03-20
 asx tasks complete 1205678901234567
-asx tasks comments 1205678901234567                       # list comments (default)
-asx tasks comments add 1205678901234567 --text "Deployed" # add a comment
-asx tasks stories 1205678901234567                        # list all stories
-asx tasks dependencies 1205678901234567                   # list dependencies
-asx tasks dependencies add 1205678901234567 9876543210    # add a dependency
+asx tasks comments add 1205678901234567 --text "Deployed"
+asx tasks dependencies add 1205678901234567 9876543210
 asx tasks projects add 1205678901234567 1201234567890456 --section 1203456789012345
-asx tasks tags add 1205678901234567 1207890123456789
+# see all available flags
+asx describe tasks.search
 ```
 
-#### tasks search flags
+### `asx projects`
 
-| Flag                   | Required | Description                                                     |
-| ---------------------- | -------- | --------------------------------------------------------------- |
-| `--workspace <gid>`    | No       | Workspace to search in (defaults to stored account workspace)   |
-| `--assignee <gid\|me>` | No       | Filter by assignee                                              |
-| `--project <gid>`      | No       | Filter by project                                               |
-| `--completed`          | No       | Include completed tasks (default: false)                        |
-| `--due-before <date>`  | No       | Tasks due before this date (YYYY-MM-DD)                         |
-| `--due-after <date>`   | No       | Tasks due after this date (YYYY-MM-DD)                          |
-| `--sort-by <field>`    | No       | Sort by: due_date, created_at, completed_at, likes, modified_at |
-| `--sort-ascending`     | No       | Sort in ascending order                                         |
-| `--tag <gid>`          | No       | Filter by tag                                                   |
-| `--section <gid>`      | No       | Filter by section                                               |
-| `--is-subtask`         | No       | Filter to subtasks only                                         |
-| `--limit <n>`          | No       | Max results to return (1-100)                                   |
-| `--offset <token>`     | No       | Pagination offset from a previous response                      |
-| `--fields <fields>`    | No       | Comma-separated fields to return                                |
-| `--account <alias>`    | No       | Account to use                                                  |
-
-#### tasks create flags
-
-| Flag                      | Required | Description                                         |
-| ------------------------- | -------- | --------------------------------------------------- |
-| `--name <text>`           | Yes      | Task name                                           |
-| `--project <gid>`         | No       | Add to project                                      |
-| `--parent <gid>`          | No       | Parent task GID (create as subtask)                 |
-| `--assignee <gid\|me>`    | No       | Assign to user                                      |
-| `--due <YYYY-MM-DD>`      | No       | Due date                                            |
-| `--start-on <YYYY-MM-DD>` | No       | Start date                                          |
-| `--notes <text>`          | No       | Task description                                    |
-| `--fields <fields>`       | No       | Comma-separated fields to return                    |
-| `--json <json>`           | No       | Raw JSON body (mutually exclusive with value flags) |
-| `--dry-run`               | No       | Preview request without sending                     |
-| `--account <alias>`       | No       | Account to use                                      |
-
-#### tasks update flags
-
-| Flag                      | Required | Description                                         |
-| ------------------------- | -------- | --------------------------------------------------- |
-| `--name <text>`           | No       | New task name                                       |
-| `--assignee <gid\|me>`    | No       | New assignee                                        |
-| `--due <YYYY-MM-DD>`      | No       | New due date                                        |
-| `--start-on <YYYY-MM-DD>` | No       | New start date                                      |
-| `--notes <text>`          | No       | New description                                     |
-| `--fields <fields>`       | No       | Comma-separated fields to return                    |
-| `--json <json>`           | No       | Raw JSON body (mutually exclusive with value flags) |
-| `--dry-run`               | No       | Preview request without sending                     |
-| `--account <alias>`       | No       | Account to use                                      |
-
-### `asx projects` - Manage Asana projects
-
-| Command                                            | Description                    |
-| -------------------------------------------------- | ------------------------------ |
-| `asx projects list`                                | List projects in a workspace   |
-| `asx projects get <gid>`                           | Get project details            |
-| `asx projects create --name <name>`                | Create a new project           |
-| `asx projects update <gid>`                        | Update a project               |
-| `asx projects delete <gid>`                        | Delete a project               |
-| `asx projects duplicate <gid> --name <name>`       | Duplicate a project            |
-| `asx projects statuses [list] <gid>`               | List status updates            |
-| `asx projects statuses create <gid>`               | Create a project status update |
-| `asx projects memberships [list] <gid>`            | List project memberships       |
-| `asx projects memberships add <gid> <user-gid>`    | Add a member to a project      |
-| `asx projects memberships remove <gid> <user-gid>` | Remove a member from a project |
-| `asx projects task-counts <gid>`                   | Get task counts for a project  |
+| Command                                                      | Description                   |
+| ------------------------------------------------------------ | ----------------------------- |
+| `asx projects list`                                          | List projects in a workspace  |
+| `asx projects get <project-gid>`                             | Get project details           |
+| `asx projects create --name <name>`                          | Create a new project          |
+| `asx projects update <project-gid>`                          | Update a project              |
+| `asx projects delete <project-gid>`                          | Delete a project              |
+| `asx projects duplicate <project-gid> --name <name>`         | Duplicate a project           |
+| `asx projects statuses [list\|create] <project-gid>`         | List or create status updates |
+| `asx projects memberships [list\|add\|remove] <project-gid>` | List, add, or remove members  |
+| `asx projects task-counts <project-gid>`                     | Get task counts for a project |
 
 ```bash
-asx projects list --workspace 1209876543210987
 asx projects list --workspace 1209876543210987 --team 1204567890123456 --archived
-asx projects get 1201234567890123
 asx projects create --name "Q2 Launch" --workspace 1209876543210987 --team 1204567890123456
 asx projects update 1201234567890123 --name "Q2 Launch (v2)" --color "light-green"
+# see all available flags
+asx describe projects.create
 ```
 
-#### projects list flags
+### `asx workspaces` / `asx users` / `asx teams`
 
-| Flag                | Required | Description                                          |
-| ------------------- | -------- | ---------------------------------------------------- |
-| `--workspace <gid>` | No       | Workspace GID (defaults to stored account workspace) |
-| `--team <gid>`      | No       | Team GID (list projects for a specific team)         |
-| `--archived`        | No       | Include archived projects (default: false)           |
-| `--limit <n>`       | No       | Max results to return                                |
-| `--offset <token>`  | No       | Pagination offset from a previous response           |
-| `--fields <fields>` | No       | Comma-separated fields to return                     |
-| `--account <alias>` | No       | Account to use                                       |
+Read-only resources with `list` and `get <resource-gid>` commands. `users` and `teams` accept `--workspace`. List commands are paginated (default 20; use `--limit` and `--offset`).
 
-#### projects create flags
+### `asx custom-fields`
 
-| Flag                      | Required | Description                                          |
-| ------------------------- | -------- | ---------------------------------------------------- |
-| `--name <text>`           | Yes      | Project name                                         |
-| `--workspace <gid>`       | No       | Workspace GID (defaults to stored account workspace) |
-| `--team <gid>`            | No       | Team GID                                             |
-| `--color <colour>`        | No       | Project colour                                       |
-| `--notes <text>`          | No       | Project description                                  |
-| `--due-on <YYYY-MM-DD>`   | No       | Due date                                             |
-| `--start-on <YYYY-MM-DD>` | No       | Start date                                           |
-| `--default-view <view>`   | No       | Default view (list, board, calendar, timeline)       |
-| `--json <json>`           | No       | Raw JSON body (mutually exclusive with value flags)  |
-| `--dry-run`               | No       | Preview request without sending                      |
-| `--account <alias>`       | No       | Account to use                                       |
+Full CRUD: `list`, `get`, `create`, `update`, `delete`. Premium Asana feature; free workspaces may return empty results.
 
-### `asx workspaces` - Manage Asana workspaces
+### `asx tags`
 
-| Command                    | Description                    |
-| -------------------------- | ------------------------------ |
-| `asx workspaces list`      | List all accessible workspaces |
-| `asx workspaces get <gid>` | Get workspace details          |
+Full CRUD: `list`, `get`, `create`, `update`, `delete`.
 
-```bash
-asx workspaces list
-asx workspaces get 1209876543210987
-```
+### `asx sections`
 
-### `asx users` - Manage Asana users
-
-| Command               | Description               |
-| --------------------- | ------------------------- |
-| `asx users list`      | List users in a workspace |
-| `asx users get <gid>` | Get user details          |
-
-```bash
-asx users list --workspace 1209876543210987
-asx users get 1206789012345678
-```
-
-### `asx custom-fields` - Manage Asana custom field definitions
-
-| Command                          | Description                         |
-| -------------------------------- | ----------------------------------- |
-| `asx custom-fields list`         | List custom fields in a workspace   |
-| `asx custom-fields get <gid>`    | Get custom field definition details |
-| `asx custom-fields create`       | Create a custom field definition    |
-| `asx custom-fields update <gid>` | Update a custom field definition    |
-| `asx custom-fields delete <gid>` | Delete a custom field definition    |
-
-```bash
-asx custom-fields list --workspace 1209876543210987
-asx custom-fields get 1208901234567890
-asx custom-fields get 1208901234567890 --fields name,resource_subtype,enum_options.name
-asx custom-fields create --name "Priority" --resource-subtype enum
-asx custom-fields update 1208901234567890 --name "Renamed Field"
-asx custom-fields delete 1208901234567890
-```
-
-Use `asx describe custom_field` to see all available fields. Custom field GIDs from `list` can be used with `--json` on task create/update to set values:
-
-```bash
-asx tasks create --json '{"name":"Deploy v2","projects":["123"],"custom_fields":{"1208901234567890":"high"}}'
-```
-
-- `custom-fields list` and `create` require a workspace (stored or `--workspace`).
-- This is a premium Asana feature; free workspaces may return empty results.
-
-### `asx tags` - Manage Asana tags
-
-| Command                         | Description      |
-| ------------------------------- | ---------------- |
-| `asx tags list`                 | List tags        |
-| `asx tags get <gid>`            | Get tag details  |
-| `asx tags create --name <name>` | Create a new tag |
-| `asx tags update <gid>`         | Update a tag     |
-| `asx tags delete <gid>`         | Delete a tag     |
-
-```bash
-asx tags list --workspace 1209876543210987
-asx tags get 1207890123456789
-asx tags create --name "Bug" --color "light-red" --workspace 1209876543210987
-asx tags update 1207890123456789 --name "Critical Bug" --color "dark-red"
-asx tags delete 1207890123456789
-```
-
-#### tags list flags
-
-| Flag                | Required | Description                                          |
-| ------------------- | -------- | ---------------------------------------------------- |
-| `--workspace <gid>` | No       | Workspace GID (defaults to stored account workspace) |
-| `--limit <n>`       | No       | Max results to return (1-100)                        |
-| `--offset <token>`  | No       | Pagination offset from a previous response           |
-| `--fields <fields>` | No       | Comma-separated fields to return                     |
-| `--account <alias>` | No       | Account to use                                       |
-
-#### tags create flags
-
-| Flag                | Required | Description                                          |
-| ------------------- | -------- | ---------------------------------------------------- |
-| `--name <text>`     | Yes      | Tag name                                             |
-| `--color <colour>`  | No       | Tag colour                                           |
-| `--notes <text>`    | No       | Tag description                                      |
-| `--workspace <gid>` | No       | Workspace GID (defaults to stored account workspace) |
-| `--json <json>`     | No       | Raw JSON body (mutually exclusive with value flags)  |
-| `--dry-run`         | No       | Preview request without sending                      |
-| `--account <alias>` | No       | Account to use                                       |
-
-### `asx sections` - Manage Asana sections
-
-| Command                             | Description          |
-| ----------------------------------- | -------------------- |
-| `asx sections list --project <gid>` | List sections        |
-| `asx sections get <gid>`            | Get section details  |
-| `asx sections create --name <name>` | Create a new section |
-| `asx sections update <gid>`         | Update a section     |
-| `asx sections delete <gid>`         | Delete a section     |
-
-```bash
-asx sections list --project 1201234567890123
-asx sections get 1203456789012345
-asx sections create --name "Backlog" --project 1201234567890123
-asx sections update 1203456789012345 --name "Done"
-asx sections delete 1203456789012345
-```
-
-`--project` is required for `list` and `create` (when not using `--json`).
-
-### `asx teams` - Manage Asana teams
-
-| Command               | Description                   |
-| --------------------- | ----------------------------- |
-| `asx teams list`      | List teams in an organisation |
-| `asx teams get <gid>` | Get team details              |
-
-```bash
-asx teams list --workspace 1209876543210987
-asx teams get 1204567890123456
-asx teams get 1204567890123456 --fields name,description,permalink_url
-```
+Full CRUD: `list`, `get`, `create`, `update`, `delete`. `--project` is required for `list` and `create`.
 
 ## Output Format
 
-All commands produce structured JSON with a `_meta` envelope:
+API commands produce structured JSON with a `_meta` envelope:
 
 ```json
 {
   "_meta": {
     "command": "tasks.search",
-    "account": "work",
     "timestamp": "2026-03-05T10:00:00.000Z"
   },
-  "data": [ ... ]
+  "tasks": [ ... ]
 }
 ```
 
-Errors also return JSON:
+The resource key matches the command (e.g. `tasks`, `task`, `project`, `section`).
 
-```json
-{
-  "error": {
-    "code": "AUTH_REQUIRED",
-    "message": "No Asana credentials found",
-    "suggestion": "Run `asx auth add <alias>` to add an account"
-  }
-}
-```
+Errors return `{ error: { code, message, suggestion } }` when piped; in a TTY they print plain text.
 
 ### Exit codes
 
@@ -445,63 +196,6 @@ Errors also return JSON:
 | 3    | Input error          |
 | 4    | API error            |
 | 5    | Rate limited         |
-
-## Agent Features
-
-asx is designed for AI agent use. These features help agents interact safely and efficiently.
-
-### Input validation
-
-GIDs, dates, and text are validated before any API call. Invalid input returns `INPUT_INVALID` (exit 3) with a `suggestion` field — no wasted API calls.
-
-```bash
-asx tasks get abc # exit 3: "Invalid GID: must be numeric"
-```
-
-### Field selection (`--fields`)
-
-Control which fields are returned to keep responses small and context windows lean. Available on all resource-returning commands.
-
-```bash
-asx tasks get 1205678901234567 --fields name,due_on
-asx tasks search "bug" --workspace 1209876543210987 --fields name,assignee.name
-```
-
-Use `asx describe task` to discover available fields for a resource type.
-
-### Dry-run mode (`--dry-run`)
-
-Preview mutation requests without sending them. No auth required. Available on all mutating commands (create, update, delete, duplicate, complete, comments add, dependencies add/remove, etc.).
-
-```bash
-asx tasks create --name "Deploy v2" --project 1201234567890123 --dry-run
-```
-
-### Raw JSON input (`--json`)
-
-Pass a raw JSON request body for complex payloads. Mutually exclusive with value flags (`--name`, `--notes`, etc.). Combine with `--dry-run` to preview.
-
-```bash
-asx tasks create --json '{"name":"Deploy v2","custom_fields":{"1208901234567890":"high"}}' --dry-run
-```
-
-### Schema introspection (`asx describe`)
-
-Discover commands, flags, and fields at runtime — no docs needed.
-
-```bash
-asx describe # list all commands and resource types
-asx describe tasks.create # show flags, args, and types for a command
-asx describe task # show available fields for a resource type
-```
-
-## Agent Skill
-
-asx ships with an [agent skill](https://skills.sh) (`skills/asx/SKILL.md`) that gives AI coding agents full context on every command, flag, and workflow.
-
-```bash
-npx skills add mwpryer/asx
-```
 
 ## Licence
 

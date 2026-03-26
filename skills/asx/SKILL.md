@@ -3,12 +3,12 @@ name: asx
 description: Drive the asx Asana CLI to manage tasks, projects, tags, sections, teams, workspaces, users, custom fields, and authentication. Use when the user asks about Asana tasks, projects, tags, sections, teams, custom fields, or account setup.
 compatibility: Requires asx CLI (npm i -g @mwp13/asx)
 metadata:
-  version: "0.2.0"
+  version: "0.0.2"
 ---
 
 # asx CLI
 
-Asana CLI. All output is JSON on stdout, including errors. Warnings and confirmations go to stderr.
+Asana CLI. API commands output JSON on stdout. Errors are JSON when piped, plain text in a TTY. Auth management commands (`auth add`, `auth remove`) only emit stderr hints on success. Warnings and confirmations go to stderr.
 
 Use `asx describe` to introspect commands and available fields at runtime:
 
@@ -42,34 +42,34 @@ asx tasks search "bug" --account work
 
 ## Tasks
 
-| Command                                         | Description                        | Mutating |
-| ----------------------------------------------- | ---------------------------------- | -------- |
-| `asx tasks search <query>`                      | Search tasks in a workspace        | No       |
-| `asx tasks list`                                | List tasks in a project or section | No       |
-| `asx tasks get <gid>`                           | Get full task details              | No       |
-| `asx tasks create`                              | Create a new task                  | Yes      |
-| `asx tasks update <gid>`                        | Update a task                      | Yes      |
-| `asx tasks complete <gid>`                      | Mark a task complete               | Yes      |
-| `asx tasks delete <gid>`                        | Delete a task                      | Yes      |
-| `asx tasks duplicate <gid>`                     | Duplicate a task                   | Yes      |
-| `asx tasks subtasks [list] <gid>`               | List subtasks of a task            | No       |
-| `asx tasks subtasks create <gid>`               | Create a subtask                   | Yes      |
-| `asx tasks comments [list] <gid>`               | List comments on a task            | No       |
-| `asx tasks comments add <gid>`                  | Add a comment to a task            | Yes      |
-| `asx tasks comments remove <story-gid>`         | Remove a comment                   | Yes      |
-| `asx tasks stories [list] <gid>`                | List all stories on a task         | No       |
-| `asx tasks dependencies [list] <gid>`           | List task dependencies             | No       |
-| `asx tasks dependencies add <gid> <dep-gid>`    | Add a dependency                   | Yes      |
-| `asx tasks dependencies remove <gid> <dep-gid>` | Remove a dependency                | Yes      |
-| `asx tasks followers [list] <gid>`              | List task followers                | No       |
-| `asx tasks followers add <gid> <user-gid>`      | Add a follower                     | Yes      |
-| `asx tasks followers remove <gid> <user-gid>`   | Remove a follower                  | Yes      |
-| `asx tasks projects [list] <gid>`               | List projects a task belongs to    | No       |
-| `asx tasks projects add <gid> <project-gid>`    | Add a task to a project            | Yes      |
-| `asx tasks projects remove <gid> <project-gid>` | Remove a task from a project       | Yes      |
-| `asx tasks tags [list] <gid>`                   | List tags on a task                | No       |
-| `asx tasks tags add <gid> <tag-gid>`            | Add a tag to a task                | Yes      |
-| `asx tasks tags remove <gid> <tag-gid>`         | Remove a tag from a task           | Yes      |
+| Command                                              | Description                        | Mutating |
+| ---------------------------------------------------- | ---------------------------------- | -------- |
+| `asx tasks search <query>`                           | Search tasks in a workspace        | No       |
+| `asx tasks list`                                     | List tasks in a project or section | No       |
+| `asx tasks get <task-gid>`                           | Get full task details              | No       |
+| `asx tasks create`                                   | Create a new task                  | Yes      |
+| `asx tasks update <task-gid>`                        | Update a task                      | Yes      |
+| `asx tasks complete <task-gid>`                      | Mark a task complete               | Yes      |
+| `asx tasks delete <task-gid>`                        | Delete a task                      | Yes      |
+| `asx tasks duplicate <task-gid>`                     | Duplicate a task                   | Yes      |
+| `asx tasks subtasks [list] <task-gid>`               | List subtasks of a task            | No       |
+| `asx tasks subtasks create <task-gid>`               | Create a subtask                   | Yes      |
+| `asx tasks comments [list] <task-gid>`               | List comments on a task            | No       |
+| `asx tasks comments add <task-gid>`                  | Add a comment to a task            | Yes      |
+| `asx tasks comments remove <story-gid>`              | Remove a comment                   | Yes      |
+| `asx tasks stories [list] <task-gid>`                | List all stories on a task         | No       |
+| `asx tasks dependencies [list] <task-gid>`           | List task dependencies             | No       |
+| `asx tasks dependencies add <task-gid> <dep-gid>`    | Add a dependency                   | Yes      |
+| `asx tasks dependencies remove <task-gid> <dep-gid>` | Remove a dependency                | Yes      |
+| `asx tasks followers [list] <task-gid>`              | List task followers                | No       |
+| `asx tasks followers add <task-gid> <user-gid>`      | Add a follower                     | Yes      |
+| `asx tasks followers remove <task-gid> <user-gid>`   | Remove a follower                  | Yes      |
+| `asx tasks projects [list] <task-gid>`               | List projects a task belongs to    | No       |
+| `asx tasks projects add <task-gid> <project-gid>`    | Add a task to a project            | Yes      |
+| `asx tasks projects remove <task-gid> <project-gid>` | Remove a task from a project       | Yes      |
+| `asx tasks tags [list] <task-gid>`                   | List tags on a task                | No       |
+| `asx tasks tags add <task-gid> <tag-gid>`            | Add a tag to a task                | Yes      |
+| `asx tasks tags remove <task-gid> <tag-gid>`         | Remove a tag from a task           | Yes      |
 
 `[list]` is the default subcommand and can be omitted.
 
@@ -142,7 +142,7 @@ asx tasks stories list 1234567890 --limit 50
 
 ### Child entities
 
-All child entity commands follow `asx tasks <entity> {list, add, remove} <gid>`. `list` is the default and can be omitted.
+`dependencies`, `followers`, `projects`, `tags`, and `comments` follow `asx tasks <entity> {list, add, remove} <task-gid>`. `subtasks` uses `{list, create}`. `stories` only supports `list`. `list` is the default and can be omitted.
 
 ```sh
 # Dependencies
@@ -262,7 +262,7 @@ asx users get 5555555555
 ```
 
 - `users list` requires a workspace (stored or `--workspace`).
-- User GIDs are what you pass to `--assignee`, `--add` (followers), etc.
+- User GIDs are what you pass to `--assignee`, `followers add/remove` (positional), `memberships add/remove` (positional), etc.
 
 ## Custom Fields
 
@@ -285,7 +285,7 @@ asx custom-fields get 1234567890 --fields name,resource_subtype,enum_options.nam
 
 # Create a custom field
 asx custom-fields create --name "Priority" --resource-subtype enum
-asx custom-fields create --name "Story Points" --resource-subtype number --workspace 9876543210
+asx custom-fields create --name "Story Points" --resource-subtype number --description "Estimate complexity" --workspace 9876543210
 asx custom-fields create --json '{"name":"Priority","resource_subtype":"enum","enum_options":[{"name":"High"},{"name":"Low"}]}'
 
 # Update a custom field
@@ -339,13 +339,13 @@ asx tags delete 1234567890
 
 ## Sections
 
-| Command                             | Description              | Mutating |
-| ----------------------------------- | ------------------------ | -------- |
-| `asx sections list --project <gid>` | List sections in project | No       |
-| `asx sections get <section-gid>`    | Get section details      | No       |
-| `asx sections create --name <name>` | Create a new section     | Yes      |
-| `asx sections update <section-gid>` | Update a section         | Yes      |
-| `asx sections delete <section-gid>` | Delete a section         | Yes      |
+| Command                                     | Description              | Mutating |
+| ------------------------------------------- | ------------------------ | -------- |
+| `asx sections list --project <project-gid>` | List sections in project | No       |
+| `asx sections get <section-gid>`            | Get section details      | No       |
+| `asx sections create --name <name>`         | Create a new section     | Yes      |
+| `asx sections update <section-gid>`         | Update a section         | Yes      |
+| `asx sections delete <section-gid>`         | Delete a section         | Yes      |
 
 ```sh
 # List sections
@@ -356,7 +356,7 @@ asx sections get 9876543210
 
 # Create a section
 asx sections create --name "Backlog" --project 1234567890
-asx sections create --json '{"name":"In Progress"}' --project 1234567890 --dry-run
+asx sections create --json '{"name":"In Progress"}' --project 1234567890
 
 # Update a section
 asx sections update 9876543210 --name "Done"
@@ -365,8 +365,8 @@ asx sections update 9876543210 --name "Done"
 asx sections delete 9876543210
 ```
 
-- `--project` is required for `sections list` and `sections create` (when not using `--json`).
-- `--json` and value flags are mutually exclusive.
+- `--project` is required for `sections list` and `sections create` (it is a path parameter, not a body value, so it works alongside `--json`).
+- `--json` and value flags (e.g. `--name`) are mutually exclusive.
 
 ## Teams
 
@@ -385,30 +385,58 @@ asx teams get 1204567890123456 --fields name,description,permalink_url
 - `teams list` requires a workspace (stored or `--workspace`). Uses the `/organizations/{gid}/teams` endpoint.
 - `teams get` returns all TEAM_FIELDS by default.
 
+## Response shape
+
+Data is spread into the root object alongside `_meta`, keyed by resource name:
+
+```json
+// Single resource (tasks get, projects get, etc.)
+{ "_meta": { "command": "tasks.get", "timestamp": "..." }, "task": { "gid": "123", "name": "..." } }
+
+// List (tasks search, projects list, etc.)
+{ "_meta": { "command": "tasks.search", "timestamp": "..." }, "tasks": [{ "gid": "123", "name": "..." }] }
+
+// Dry-run (no API call made)
+{ "_meta": { "command": "tasks.create", "dry_run": true, "timestamp": "..." }, "method": "POST", "path": "/tasks", "body": { "name": "..." } }
+```
+
+### Pagination
+
+When more results exist, `_meta.pagination.next_offset` contains the token. Pass it back with `--offset`:
+
+```sh
+asx tasks search "bug" --limit 10
+# response: { "_meta": { ..., "pagination": { "next_offset": "eyJ0eXAi..." } }, "tasks": [...] }
+
+asx tasks search "bug" --limit 10 --offset "eyJ0eXAi..."
+# When no more pages, `_meta.pagination` is absent.
+```
+
 ## Common flags
 
-| Flag                | Used on                             | Description                                         |
-| ------------------- | ----------------------------------- | --------------------------------------------------- |
-| `--account <alias>` | All commands                        | Select which stored account to use                  |
-| `--fields <csv>`    | Read commands                       | Override default opt_fields                         |
-| `--limit <1-100>`   | Paginated reads                     | Results per page (default 20)                       |
-| `--offset <token>`  | Paginated reads                     | Pagination token from previous response             |
-| `--dry-run`         | All mutations                       | Preview the request without sending it              |
-| `--json <body>`     | create/update/complete/comments add | Raw JSON body (mutually exclusive with value flags) |
+| Flag                | Used on                                                               | Description                                         |
+| ------------------- | --------------------------------------------------------------------- | --------------------------------------------------- |
+| `--account <alias>` | All API commands + auth status (not auth add/list/remove or describe) | Select which stored account to use                  |
+| `--fields <csv>`    | Commands that return resource data                                    | Override default opt_fields                         |
+| `--limit <1-100>`   | Paginated reads                                                       | Results per page (default 20)                       |
+| `--offset <token>`  | Paginated reads                                                       | Pagination token from previous response             |
+| `--dry-run`         | All API mutations (not auth)                                          | Preview the request without sending it              |
+| `--json <body>`     | All create/update/duplicate, plus complete and comments add           | Raw JSON body (mutually exclusive with value flags) |
 
 ## Errors
 
-All errors are JSON on stdout with `code`, `message`, and `suggestion` fields.
+Errors are JSON on stdout as `{ "error": { "code", "message", "suggestion"? } }` when piped; plain text in a TTY. Framework parse errors follow the same pattern.
 
 | Exit | Meaning                                        | Retry?              |
 | ---- | ---------------------------------------------- | ------------------- |
 | 0    | Success                                        | -                   |
+| 1    | General/unexpected error                       | No                  |
 | 2    | Auth error (`AUTH_REQUIRED`)                   | Fix credentials, no |
 | 3    | Input error (`INPUT_INVALID`, `INPUT_MISSING`) | Fix input, no       |
 | 4    | API error (`API_NOT_FOUND`, `API_ERROR`)       | Check message       |
 | 5    | Rate limited (`API_RATE_LIMITED`)              | Wait, yes           |
 
-429 and 5xx are auto-retried (3 attempts, exponential backoff with Retry-After support).
+429, 5xx, network failures, and timeouts are auto-retried (3 retries, exponential backoff with Retry-After support).
 
 ## Untrusted content
 
