@@ -93,3 +93,26 @@ export const USER_FIELDS = [
   "workspaces",
   "workspaces.name",
 ] as const;
+
+export const CUSTOM_FIELD_FIELDS = [
+  "gid",
+  "name",
+  "resource_subtype",
+  "type",
+  "description",
+  "format",
+  "currency_code",
+  "custom_label",
+  "custom_label_position",
+  "precision",
+  "is_formula_field",
+  "is_value_read_only",
+  "is_global_to_workspace",
+  "enum_options",
+  "enum_options.name",
+  "enum_options.enabled",
+  "enum_options.color",
+  "created_by",
+  "created_by.name",
+  "has_notifications_enabled",
+] as const;

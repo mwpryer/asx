@@ -22,6 +22,13 @@ npm install -g @mwp13/asx
 - [Quick Start](#quick-start)
 - [Authentication](#authentication)
 - [Commands](#commands)
+  - [describe](#asx-describe---schema-introspection)
+  - [auth](#asx-auth---manage-authentication-and-accounts)
+  - [tasks](#asx-tasks---manage-asana-tasks)
+  - [projects](#asx-projects---manage-asana-projects)
+  - [workspaces](#asx-workspaces---manage-asana-workspaces)
+  - [users](#asx-users---manage-asana-users)
+  - [custom-fields](#asx-custom-fields---inspect-asana-custom-field-definitions)
 - [Output Format](#output-format)
 - [Agent Features](#agent-features)
 - [Agent Skill](#agent-skill)
@@ -87,12 +94,12 @@ Every command outputs structured JSON to stdout. Logs and hints go to stderr.
 
 These flags appear on multiple commands:
 
-| Flag                | Applies to                                                           | Description                                                 |
-| ------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `--account <alias>` | All commands that call the API                                       | Account to use (see [Resolution order](#resolution-order))  |
-| `--fields <fields>` | All resource-returning commands (`tasks`, `projects`, `workspaces`)  | Comma-separated field names to return (overrides defaults)  |
-| `--dry-run`         | Mutating commands (create, update, delete, duplicate, etc.)          | Preview the request without sending it                      |
-| `--json <json>`     | Mutating commands that accept a body (`create`, `update`, `comment`) | Raw JSON request body (mutually exclusive with value flags) |
+| Flag                | Applies to                                                                                 | Description                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| `--account <alias>` | All commands that call the API                                                             | Account to use (see [Resolution order](#resolution-order))  |
+| `--fields <fields>` | All resource-returning commands (`tasks`, `projects`, `workspaces`, `custom-fields`, etc.) | Comma-separated field names to return (overrides defaults)  |
+| `--dry-run`         | Mutating commands (create, update, delete, duplicate, etc.)                                | Preview the request without sending it                      |
+| `--json <json>`     | Mutating commands that accept a body (`create`, `update`, `comment`)                       | Raw JSON request body (mutually exclusive with value flags) |
 
 ### `asx describe` - Schema introspection
 
@@ -279,6 +286,28 @@ asx workspaces get 1209876543210987
 asx users list --workspace 1209876543210987
 asx users get 1206789012345678
 ```
+
+### `asx custom-fields` - Inspect Asana custom field definitions
+
+| Command                       | Description                         |
+| ----------------------------- | ----------------------------------- |
+| `asx custom-fields list`      | List custom fields in a workspace   |
+| `asx custom-fields get <gid>` | Get custom field definition details |
+
+```bash
+asx custom-fields list --workspace 1209876543210987
+asx custom-fields get 1208901234567890
+asx custom-fields get 1208901234567890 --fields name,resource_subtype,enum_options.name
+```
+
+Use `asx describe custom_field` to see all available fields. Custom field GIDs from `list` can be used with `--json` on task create/update to set values:
+
+```bash
+asx tasks create --json '{"name":"Deploy v2","projects":["123"],"custom_fields":{"1208901234567890":"high"}}'
+```
+
+- `custom-fields list` requires a workspace (stored or `--workspace`).
+- This is a premium Asana feature; free workspaces may return empty results.
 
 ## Output Format
 

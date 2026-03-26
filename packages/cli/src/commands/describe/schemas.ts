@@ -63,6 +63,66 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
+  "custom-fields.get": {
+    brief: "Get custom field definition details",
+    positional: [
+      {
+        name: "custom-field-gid",
+        type: "string",
+        brief: "Custom field GID",
+      },
+    ],
+    flags: [
+      {
+        name: "fields",
+        type: "string",
+        required: false,
+        brief: "Comma-separated field names to return (overrides defaults)",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "custom-fields.list": {
+    brief: "List custom fields in a workspace",
+    positional: [],
+    flags: [
+      {
+        name: "workspace",
+        type: "string",
+        required: false,
+        brief: "Workspace GID (defaults to stored account workspace)",
+      },
+      {
+        name: "limit",
+        type: "number",
+        required: false,
+        brief: "Max results to return (1-100)",
+      },
+      {
+        name: "offset",
+        type: "string",
+        required: false,
+        brief: "Pagination offset from a previous response",
+      },
+      {
+        name: "fields",
+        type: "string",
+        required: false,
+        brief: "Comma-separated field names to return (overrides defaults)",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
   "tasks.search": {
     brief: "Search tasks in a workspace",
     positional: [{ name: "query", type: "string", brief: "Search query text" }],

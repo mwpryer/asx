@@ -1,6 +1,6 @@
 ---
 name: asx
-description: Drive the asx Asana CLI to manage tasks, projects, workspaces, users, and authentication. Use when the user asks about Asana tasks, projects, or account setup.
+description: Drive the asx Asana CLI to manage tasks, projects, workspaces, users, custom fields, and authentication. Use when the user asks about Asana tasks, projects, custom fields, or account setup.
 compatibility: Requires asx CLI (npm i -g @mwp13/asx)
 metadata:
   version: "0.2.0"
@@ -226,6 +226,29 @@ asx users get 5555555555
 
 - `users list` requires a workspace (stored or `--workspace`).
 - User GIDs are what you pass to `--assignee`, `--add` (followers), etc.
+
+## Custom Fields
+
+| Command                                    | Description                         | Mutating |
+| ------------------------------------------ | ----------------------------------- | -------- |
+| `asx custom-fields list`                   | List custom fields in a workspace   | No       |
+| `asx custom-fields get <custom-field-gid>` | Get custom field definition details | No       |
+
+```sh
+# Discover custom fields in a workspace
+asx custom-fields list
+asx custom-fields list --workspace 9876543210
+
+# Get full definition (type, enum options, format)
+asx custom-fields get 1234567890
+asx custom-fields get 1234567890 --fields name,resource_subtype,enum_options.name,enum_options.color
+```
+
+- `custom-fields list` requires a workspace (stored or `--workspace`).
+- Use GIDs from `list` to set custom field values via `--json` on task create/update:
+  `asx tasks create --json '{"name":"Task","projects":["123"],"custom_fields":{"456":"high"}}'`
+- Premium Asana feature; free workspaces may return empty results.
+- `asx describe custom_field` shows all available opt_fields.
 
 ## Common flags
 

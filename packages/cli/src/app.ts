@@ -2,6 +2,7 @@ import { buildRouteMap } from "@stricli/core";
 
 import { buildAsxApp } from "@mwp13/asx-core";
 import { authRouteMap } from "@/commands/auth/route-map";
+import { customFieldsRouteMap } from "@/commands/custom-fields/route-map";
 import { describeCommand } from "@/commands/describe/describe";
 import { projectsRouteMap } from "@/commands/projects/route-map";
 import { tasksRouteMap } from "@/commands/tasks/route-map";
@@ -15,6 +16,7 @@ const rootRouteMap = buildRouteMap({
     projects: projectsRouteMap,
     workspaces: workspacesRouteMap,
     users: usersRouteMap,
+    "custom-fields": customFieldsRouteMap,
     describe: describeCommand,
   },
   docs: {

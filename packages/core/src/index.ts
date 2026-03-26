@@ -40,4 +40,5 @@ export {
   WORKSPACE_FIELDS,
   SECTION_FIELDS,
   USER_FIELDS,
+  CUSTOM_FIELD_FIELDS,
 } from "@/types/fields";

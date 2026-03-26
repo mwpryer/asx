@@ -6,6 +6,7 @@ import {
   WORKSPACE_FIELDS,
   SECTION_FIELDS,
   USER_FIELDS,
+  CUSTOM_FIELD_FIELDS,
 } from "@mwp13/asx-core";
 import { describeCommand } from "@/commands/describe/describe";
 import { COMMAND_SCHEMAS } from "@/commands/describe/schemas";
@@ -18,6 +19,8 @@ describe("COMMAND_SCHEMAS completeness", () => {
     "auth.list",
     "auth.remove",
     "auth.status",
+    "custom-fields.get",
+    "custom-fields.list",
     "projects.create",
     "projects.delete",
     "projects.duplicate",
@@ -74,6 +77,7 @@ describe("field registries", () => {
     workspace: WORKSPACE_FIELDS,
     section: SECTION_FIELDS,
     user: USER_FIELDS,
+    custom_field: CUSTOM_FIELD_FIELDS,
   };
 
   for (const [resource, fields] of Object.entries(resourceFields)) {

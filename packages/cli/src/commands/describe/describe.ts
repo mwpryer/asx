@@ -7,6 +7,7 @@ import {
   WORKSPACE_FIELDS,
   SECTION_FIELDS,
   USER_FIELDS,
+  CUSTOM_FIELD_FIELDS,
 } from "@mwp13/asx-core";
 import type { AsxCliContext } from "@/context";
 import { COMMAND_SCHEMAS } from "@/commands/describe/schemas";
@@ -17,6 +18,7 @@ const RESOURCE_FIELDS: Record<string, readonly string[]> = {
   workspace: WORKSPACE_FIELDS,
   section: SECTION_FIELDS,
   user: USER_FIELDS,
+  custom_field: CUSTOM_FIELD_FIELDS,
 };
 
 export const describeCommand = buildCommand({
