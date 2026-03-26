@@ -11,6 +11,7 @@ import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   fieldsFlag,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
 } from "@/flags";
@@ -44,7 +45,7 @@ export const getCommand = buildCommand({
     const client = new AsanaClient({ pat });
     const res = await client.request({
       path: `/custom_fields/${customFieldGid}`,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "name",
         "resource_subtype",
         "type",
@@ -56,7 +57,7 @@ export const getCommand = buildCommand({
         "enum_options.color",
         "precision",
         "is_formula_field",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

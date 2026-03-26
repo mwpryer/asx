@@ -1,4 +1,11 @@
-import { AsanaClient, hint, setAccount } from "@mwp13/asx-core";
+import {
+  AsanaClient,
+  InputError,
+  hint,
+  loadAccounts,
+  setAccount,
+  validateGid,
+} from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 
 import { asxFunc } from "@/command";
@@ -49,8 +56,24 @@ export const addCommand = buildCommand({
       optFields: ["name", "email", "workspaces", "workspaces.name"],
     });
 
+    if (flags.workspace) {
+      validateGid(flags.workspace, "workspace");
+      const memberGids = (res.data.workspaces ?? []).map((w) => w.gid);
+      if (!memberGids.includes(flags.workspace)) {
+        throw new InputError(
+          "INPUT_INVALID",
+          `Workspace ${flags.workspace} not found in this account's memberships`,
+          `Available: ${(res.data.workspaces ?? []).map((w) => `${w.name} (${w.gid})`).join(", ")}`,
+        );
+      }
+    }
     let workspaceGid = flags.workspace;
     const workspaces = res.data.workspaces ?? [];
+
+    const existing = loadAccounts();
+    if (alias in existing) {
+      hint(`Replacing existing account "${alias}"`);
+    }
 
     if (!workspaceGid && workspaces.length === 1) {
       workspaceGid = workspaces[0]!.gid;

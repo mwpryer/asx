@@ -14,6 +14,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -66,7 +67,7 @@ export const completeCommand = buildCommand({
       method: "PUT",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? ["name", "gid", "completed"],
+      optFields: parseFields(flags.fields, ["name", "gid", "completed"]),
     });
     this.process.stdout.write(
       formatJSON({ task: res.data }, { command: "tasks.complete" }) + "\n",

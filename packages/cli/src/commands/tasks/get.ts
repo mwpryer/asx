@@ -11,6 +11,7 @@ import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   fieldsFlag,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
 } from "@/flags";
@@ -40,7 +41,7 @@ export const getCommand = buildCommand({
     const client = new AsanaClient({ pat });
     const res = await client.request({
       path: `/tasks/${taskGid}`,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "name",
         "resource_subtype",
         "completed",
@@ -58,7 +59,7 @@ export const getCommand = buildCommand({
         "permalink_url",
         "created_at",
         "modified_at",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

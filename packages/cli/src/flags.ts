@@ -64,6 +64,25 @@ export function paginationMeta(res: AsanaResponse<unknown>) {
   return res.next_page ? { next_offset: res.next_page.offset } : undefined;
 }
 
+export function parseFields(
+  raw: string | undefined,
+  defaults: string[],
+): string[] {
+  if (raw === undefined) return defaults;
+  const fields = raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (fields.length === 0) {
+    throw new InputError(
+      "INPUT_INVALID",
+      "--fields must not be empty",
+      "Provide comma-separated field names, or omit --fields to use defaults",
+    );
+  }
+  return fields;
+}
+
 export function parseJsonInput(value: string): Record<string, unknown> {
   try {
     const parsed: unknown = JSON.parse(value);

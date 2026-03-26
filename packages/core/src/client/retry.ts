@@ -1,4 +1,4 @@
-import { ApiError } from "@/errors/errors";
+import { ApiError, AsxError, NetworkError } from "@/errors/errors";
 
 export interface RetryOpts {
   retries?: number;
@@ -34,13 +34,30 @@ export async function retryAsync<T>(
       await sleep(delay);
     }
   }
+  if (lastError instanceof AsxError) throw lastError;
+  if (isNetworkError(lastError)) {
+    const msg =
+      lastError instanceof Error ? lastError.message : String(lastError);
+    throw new NetworkError(
+      `Network request failed: ${msg}`,
+      "Check your network connection and try again",
+    );
+  }
   throw lastError;
+}
+
+function isNetworkError(err: unknown): boolean {
+  if (err instanceof TypeError) return true;
+  if (err instanceof DOMException && err.name === "TimeoutError") return true;
+  return false;
 }
 
 function isRetryable(err: unknown): boolean {
   if (err instanceof ApiError) {
     return err.status === 429 || err.status >= 500;
   }
+  if (err instanceof TypeError) return true;
+  if (err instanceof DOMException && err.name === "TimeoutError") return true;
   return false;
 }
 

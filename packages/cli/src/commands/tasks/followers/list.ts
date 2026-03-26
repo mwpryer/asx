@@ -11,6 +11,7 @@ import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   fieldsFlag,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
 } from "@/flags";
@@ -42,10 +43,10 @@ export const listCommand = buildCommand({
       followers?: Array<Record<string, unknown>>;
     }>({
       path: `/tasks/${taskGid}`,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "followers.name",
         "followers.email",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

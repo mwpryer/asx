@@ -3,6 +3,7 @@ import {
   InputError,
   formatJSON,
   resolveAuth,
+  validateGid,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 
@@ -14,6 +15,7 @@ import {
   fieldsFlag,
   paginationFlags,
   paginationMeta,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
   type PaginationFlags,
@@ -43,6 +45,7 @@ export const listCommand = buildCommand({
         workspace: string | undefined;
       },
   ) {
+    if (flags.workspace) validateGid(flags.workspace, "workspace");
     const auth = resolveAuth({ account: flags.account });
     const workspace = flags.workspace ?? auth.workspaceGid;
 
@@ -61,7 +64,7 @@ export const listCommand = buildCommand({
         limit: resolveLimit(flags),
         ...(flags.offset && { offset: flags.offset }),
       },
-      optFields: flags.fields?.split(",") ?? ["name", "color"],
+      optFields: parseFields(flags.fields, ["name", "color"]),
     });
 
     this.process.stdout.write(

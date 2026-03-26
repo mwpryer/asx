@@ -16,6 +16,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -84,16 +85,21 @@ export const updateCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      const name = flags.name
-        ? sanitizeText(flags.name, "name", 1024)
-        : undefined;
-      const description = flags.description
-        ? sanitizeText(flags.description, "description")
-        : undefined;
+      const name =
+        flags.name !== undefined
+          ? sanitizeText(flags.name, "name", 1024)
+          : undefined;
+      if (name !== undefined && !name) {
+        throw new InputError("INPUT_INVALID", "--name must not be empty");
+      }
+      const description =
+        flags.description !== undefined
+          ? sanitizeText(flags.description, "description")
+          : undefined;
 
       body = {};
-      if (name) body["name"] = name;
-      if (description) body["description"] = description;
+      if (name !== undefined) body["name"] = name;
+      if (description !== undefined) body["description"] = description;
 
       if (Object.keys(body).length === 0) {
         throw new InputError(
@@ -121,13 +127,13 @@ export const updateCommand = buildCommand({
       method: "PUT",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "gid",
         "name",
         "resource_subtype",
         "type",
         "description",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

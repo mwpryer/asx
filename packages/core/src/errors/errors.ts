@@ -63,6 +63,12 @@ export class ApiError extends AsxError {
   }
 }
 
+export class NetworkError extends AsxError {
+  constructor(message: string, suggestion?: string) {
+    super("API_ERROR", message, suggestion, EXIT_API);
+  }
+}
+
 export class InputError extends AsxError {
   constructor(
     code: "INPUT_INVALID" | "INPUT_MISSING",

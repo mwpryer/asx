@@ -1,10 +1,12 @@
 import {
   AsanaClient,
   InputError,
+  PALETTE_COLOURS,
   formatJSON,
   hint,
   resolvePat,
   sanitizeText,
+  validateEnum,
   validateGid,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
@@ -16,6 +18,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -87,17 +90,24 @@ export const updateCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      const name = flags.name
-        ? sanitizeText(flags.name, "name", 1024)
-        : undefined;
-      const notes = flags.notes
-        ? sanitizeText(flags.notes, "notes")
-        : undefined;
+      const name =
+        flags.name !== undefined
+          ? sanitizeText(flags.name, "name", 1024)
+          : undefined;
+      if (name !== undefined && !name) {
+        throw new InputError("INPUT_INVALID", "--name must not be empty");
+      }
+      const notes =
+        flags.notes !== undefined
+          ? sanitizeText(flags.notes, "notes")
+          : undefined;
+
+      if (flags.color) validateEnum(flags.color, "color", PALETTE_COLOURS);
 
       body = {};
-      if (name) body["name"] = name;
+      if (name !== undefined) body["name"] = name;
       if (flags.color) body["color"] = flags.color;
-      if (notes) body["notes"] = notes;
+      if (notes !== undefined) body["notes"] = notes;
 
       if (Object.keys(body).length === 0) {
         throw new InputError(
@@ -125,13 +135,13 @@ export const updateCommand = buildCommand({
       method: "PUT",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "name",
         "gid",
         "color",
         "notes",
         "permalink_url",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

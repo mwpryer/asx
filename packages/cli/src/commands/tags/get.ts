@@ -12,6 +12,7 @@ import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   fieldsFlag,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
 } from "@/flags";
@@ -39,7 +40,7 @@ export const getCommand = buildCommand({
     const client = new AsanaClient({ pat });
     const res = await client.request({
       path: `/tags/${tagGid}`,
-      optFields: flags.fields?.split(",") ?? [...TAG_FIELDS],
+      optFields: parseFields(flags.fields, [...TAG_FIELDS]),
     });
 
     this.process.stdout.write(

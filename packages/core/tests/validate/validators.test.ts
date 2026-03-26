@@ -5,6 +5,7 @@ import {
   validateGid,
   validateDate,
   validateLimit,
+  validateEnum,
   sanitizeText,
 } from "@/validate/validators";
 
@@ -124,6 +125,31 @@ describe("validateLimit", () => {
 
   it("throws InputError for non-integers", () => {
     expect(() => validateLimit(1.5)).toThrow(InputError);
+  });
+});
+
+describe("validateEnum", () => {
+  const allowed = ["red", "green", "blue"] as const;
+
+  it("returns the value for a valid enum member", () => {
+    expect(validateEnum("red", "color", allowed)).toBe("red");
+    expect(validateEnum("blue", "color", allowed)).toBe("blue");
+  });
+
+  it("throws InputError for an invalid value", () => {
+    expect(() => validateEnum("purple", "color", allowed)).toThrow(InputError);
+  });
+
+  it("thrown error includes the invalid value and allowed list", () => {
+    try {
+      validateEnum("purple", "color", allowed);
+      expect.unreachable("should have thrown");
+    } catch (err) {
+      expect(err).toBeInstanceOf(InputError);
+      expect((err as InputError).code).toBe("INPUT_INVALID");
+      expect((err as InputError).message).toContain("purple");
+      expect((err as InputError).suggestion).toContain("red");
+    }
   });
 });
 

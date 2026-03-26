@@ -16,6 +16,7 @@ import {
   fieldsFlag,
   paginationFlags,
   paginationMeta,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
   type PaginationFlags,
@@ -171,13 +172,13 @@ export const searchCommand = buildCommand({
     const res = await client.request({
       path: `/workspaces/${workspace}/tasks/search`,
       query: params,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "name",
         "completed",
         "assignee.name",
         "due_on",
         "modified_at",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

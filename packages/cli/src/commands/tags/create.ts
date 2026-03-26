@@ -1,11 +1,14 @@
 import {
   AsanaClient,
   InputError,
+  PALETTE_COLOURS,
   formatJSON,
   hint,
   resolveAuth,
   resolvePat,
   sanitizeText,
+  validateEnum,
+  validateGid,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 
@@ -16,6 +19,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -107,11 +111,14 @@ export const createCommand = buildCommand({
         ? sanitizeText(flags.notes, "notes")
         : undefined;
 
+      if (flags.color) validateEnum(flags.color, "color", PALETTE_COLOURS);
+
       body = { name };
       if (flags.color) body["color"] = flags.color;
       if (notes) body["notes"] = notes;
     }
 
+    if (flags.workspace) validateGid(flags.workspace, "workspace");
     let workspace = flags.workspace;
     if (!workspace && !flags.dryRun) {
       const auth = resolveAuth({ account: flags.account });
@@ -145,7 +152,7 @@ export const createCommand = buildCommand({
       method: "POST",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? ["name", "gid", "permalink_url"],
+      optFields: parseFields(flags.fields, ["name", "gid", "permalink_url"]),
     });
 
     this.process.stdout.write(

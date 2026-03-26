@@ -40,10 +40,34 @@ describe("retryAsync", () => {
     expect(fn).toHaveBeenCalledTimes(1);
   });
 
-  it("does not retry non-ApiError exceptions", async () => {
-    const fn = vi.fn().mockRejectedValue(new TypeError("fetch failed"));
+  it("retries TypeError (network failure) and succeeds", async () => {
+    const fn = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError("fetch failed"))
+      .mockResolvedValueOnce("ok");
+
+    const result = await retryAsync(fn, { retries: 3, baseDelay: 1 });
+    expect(result).toBe("ok");
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries TimeoutError (DOMException) and succeeds", async () => {
+    const fn = vi
+      .fn()
+      .mockRejectedValueOnce(
+        new DOMException("signal timed out", "TimeoutError"),
+      )
+      .mockResolvedValueOnce("ok");
+
+    const result = await retryAsync(fn, { retries: 3, baseDelay: 1 });
+    expect(result).toBe("ok");
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry non-retryable exceptions", async () => {
+    const fn = vi.fn().mockRejectedValue(new RangeError("bad"));
     await expect(retryAsync(fn, { retries: 3, baseDelay: 1 })).rejects.toThrow(
-      TypeError,
+      RangeError,
     );
     expect(fn).toHaveBeenCalledTimes(1);
   });

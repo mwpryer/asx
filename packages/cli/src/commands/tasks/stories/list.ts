@@ -14,6 +14,7 @@ import {
   fieldsFlag,
   paginationFlags,
   paginationMeta,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
   type PaginationFlags,
@@ -49,13 +50,13 @@ export const listCommand = buildCommand({
         limit: resolveLimit(flags),
         ...(flags.offset && { offset: flags.offset }),
       },
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "text",
         "created_by.name",
         "created_at",
         "type",
         "resource_subtype",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 
 import { AsanaClient } from "@/client/asana-client";
-import { AuthError, ApiError } from "@/errors/errors";
+import { AuthError, ApiError, NetworkError } from "@/errors/errors";
 
 interface CapturedRequest {
   url: string;
@@ -34,7 +34,7 @@ function fakeFetch(
 }
 
 function makeClient(fetch: typeof globalThis.fetch) {
-  return new AsanaClient({ pat: "test-pat", fetch });
+  return new AsanaClient({ pat: "test-pat", fetch, retry: { retries: 0 } });
 }
 
 describe("AsanaClient", () => {
@@ -177,13 +177,13 @@ describe("AsanaClient", () => {
     );
   });
 
-  it("throws on network error", async () => {
+  it("throws NetworkError on persistent network error after retries", async () => {
     const fetch: typeof globalThis.fetch = async () => {
       throw new TypeError("fetch failed");
     };
     const client = makeClient(fetch);
     await expect(client.request({ path: "/tasks/1" })).rejects.toThrow(
-      TypeError,
+      NetworkError,
     );
   });
 });

@@ -15,6 +15,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -102,10 +103,7 @@ export const duplicateCommand = buildCommand({
       method: "POST",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? [
-        "new_project",
-        "new_project.name",
-      ],
+      optFields: parseFields(flags.fields, ["new_project", "new_project.name"]),
     });
 
     this.process.stdout.write(

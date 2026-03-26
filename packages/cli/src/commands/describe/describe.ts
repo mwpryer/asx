@@ -1,4 +1,5 @@
 import {
+  InputError,
   formatJSON,
   TASK_FIELDS,
   PROJECT_FIELDS,
@@ -11,6 +12,7 @@ import {
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
 
+import { asxFunc } from "@/command";
 import { COMMAND_SCHEMAS } from "@/commands/describe/schemas";
 import type { AsxCliContext } from "@/context";
 
@@ -38,7 +40,11 @@ export const describeCommand = buildCommand({
       maximum: 1,
     },
   },
-  func: async function (this: AsxCliContext, _flags: {}, ...args: string[]) {
+  func: asxFunc(async function (
+    this: AsxCliContext,
+    _flags: {},
+    ...args: string[]
+  ) {
     const target = args[0];
 
     if (!target) {
@@ -74,8 +80,10 @@ export const describeCommand = buildCommand({
       ...Object.keys(COMMAND_SCHEMAS),
       ...Object.keys(RESOURCE_FIELDS),
     ].sort();
-    this.process.stderr.write(
-      `Unknown target "${target}". Available: ${allKeys.join(", ")}\n`,
+    throw new InputError(
+      "INPUT_INVALID",
+      `Unknown target "${target}"`,
+      `Available: ${allKeys.join(", ")}`,
     );
-  },
+  }),
 });

@@ -166,4 +166,15 @@ describe("describe command output", () => {
     expect(Array.isArray(out["fields"])).toBe(true);
     expect((out["fields"] as string[]).length).toBeGreaterThan(0);
   });
+
+  it("unknown target outputs InputError as JSON", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(describeCommand);
+    await func.call(ctx, {}, "nonexistent.thing");
+    const out = parseOutput(ctx);
+    const error = out["error"] as Record<string, unknown>;
+    expect(error).toBeDefined();
+    expect(error["code"]).toBe("INPUT_INVALID");
+    expect(error["message"]).toContain("nonexistent.thing");
+  });
 });

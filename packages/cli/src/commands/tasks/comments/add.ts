@@ -16,6 +16,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -104,11 +105,11 @@ export const addCommand = buildCommand({
       method: "POST",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "text",
         "created_by.name",
         "created_at",
-      ],
+      ]),
     });
     this.process.stdout.write(
       formatJSON({ story: res.data }, { command: "tasks.comments.add" }) + "\n",

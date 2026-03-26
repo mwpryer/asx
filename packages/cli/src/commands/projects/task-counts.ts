@@ -11,6 +11,7 @@ import type { AsxCliContext } from "@/context";
 import {
   accountFlag,
   fieldsFlag,
+  parseFields,
   type AccountFlag,
   type FieldsFlag,
 } from "@/flags";
@@ -40,11 +41,11 @@ export const taskCountsCommand = buildCommand({
     const client = new AsanaClient({ pat });
     const res = await client.request({
       path: `/projects/${projectGid}/task_counts`,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "num_tasks",
         "num_incomplete_tasks",
         "num_completed_tasks",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

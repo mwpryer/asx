@@ -112,6 +112,7 @@ describe("--dry-run output", () => {
         assignee: undefined,
         due: undefined,
         notes: undefined,
+        startOn: undefined,
       },
       "12345",
     );
@@ -121,6 +122,28 @@ describe("--dry-run output", () => {
     expect(out["method"]).toBe("PUT");
     expect(out["path"]).toBe("/tasks/12345");
     expect(out["body"]).toEqual({ name: "Updated" });
+  });
+
+  it("tasks update --notes '' sends empty notes in body", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(updateCommand);
+    await func.call(
+      ctx,
+      {
+        name: undefined,
+        dryRun: true,
+        account: undefined,
+        fields: undefined,
+        json: undefined,
+        assignee: undefined,
+        due: undefined,
+        notes: "",
+        startOn: undefined,
+      },
+      "12345",
+    );
+    const out = parseOutput(ctx);
+    expect(out["body"]).toEqual({ notes: "" });
   });
 
   it("tasks complete outputs _meta.dry_run, method, path, body", async () => {

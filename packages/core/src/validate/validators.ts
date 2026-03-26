@@ -8,6 +8,38 @@ const CONTROL_CHAR_PATTERN = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
 
 const DEFAULT_MAX_LENGTH = 10_000;
 
+export const PALETTE_COLOURS = [
+  "dark-pink",
+  "dark-green",
+  "dark-blue",
+  "dark-red",
+  "dark-teal",
+  "dark-brown",
+  "dark-orange",
+  "dark-purple",
+  "dark-warm-gray",
+  "light-pink",
+  "light-green",
+  "light-blue",
+  "light-red",
+  "light-teal",
+  "light-brown",
+  "light-orange",
+  "light-purple",
+  "light-warm-gray",
+  "none",
+] as const;
+
+export const STATUS_COLOURS = [
+  "on_track",
+  "at_risk",
+  "off_track",
+  "on_hold",
+  "complete",
+] as const;
+
+export const PROJECT_VIEWS = ["list", "board", "calendar", "timeline"] as const;
+
 export function validateGid(value: string, fieldName: string): string {
   if (!value || !GID_PATTERN.test(value)) {
     throw new InputError(
@@ -80,4 +112,19 @@ export function sanitizeText(
   }
 
   return cleaned;
+}
+
+export function validateEnum(
+  value: string,
+  fieldName: string,
+  allowed: readonly string[],
+): string {
+  if (!allowed.includes(value)) {
+    throw new InputError(
+      "INPUT_INVALID",
+      `Invalid ${fieldName}: "${value}"`,
+      `Must be one of: ${allowed.join(", ")}`,
+    );
+  }
+  return value;
 }

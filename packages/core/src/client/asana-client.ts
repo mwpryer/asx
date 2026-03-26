@@ -1,10 +1,14 @@
-import { retryAsync } from "@/client/retry";
+import { retryAsync, type RetryOpts } from "@/client/retry";
 import { ApiError, AuthError } from "@/errors/errors";
+
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 export interface AsanaClientOpts {
   pat: string;
   baseUrl?: string;
   fetch?: typeof globalThis.fetch;
+  timeoutMs?: number;
+  retry?: RetryOpts;
 }
 
 export interface AsanaRequestOpts {
@@ -24,11 +28,15 @@ export class AsanaClient {
   private readonly pat: string;
   private readonly baseUrl: string;
   private readonly fetch: typeof globalThis.fetch;
+  private readonly timeoutMs: number;
+  private readonly retryOpts: RetryOpts | undefined;
 
   constructor(opts: AsanaClientOpts) {
     this.pat = opts.pat;
     this.baseUrl = opts.baseUrl ?? "https://app.asana.com/api/1.0";
     this.fetch = opts.fetch ?? globalThis.fetch;
+    this.timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.retryOpts = opts.retry;
   }
 
   async request<T>(opts: AsanaRequestOpts): Promise<AsanaResponse<T>> {
@@ -63,6 +71,7 @@ export class AsanaClient {
         method,
         headers,
         body: bodyStr,
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
 
       if (!res.ok) {
@@ -101,6 +110,6 @@ export class AsanaClient {
       }
 
       return (await res.json()) as AsanaResponse<T>;
-    });
+    }, this.retryOpts);
   }
 }

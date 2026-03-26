@@ -16,6 +16,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -105,23 +106,28 @@ export const updateCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      const name = flags.name
-        ? sanitizeText(flags.name, "name", 1024)
-        : undefined;
-      const notes = flags.notes
-        ? sanitizeText(flags.notes, "notes")
-        : undefined;
+      const name =
+        flags.name !== undefined
+          ? sanitizeText(flags.name, "name", 1024)
+          : undefined;
+      if (name !== undefined && !name) {
+        throw new InputError("INPUT_INVALID", "--name must not be empty");
+      }
+      const notes =
+        flags.notes !== undefined
+          ? sanitizeText(flags.notes, "notes")
+          : undefined;
       if (flags.assignee && flags.assignee !== "me")
         validateGid(flags.assignee, "assignee");
       if (flags.due) validateDate(flags.due, "due");
       if (flags.startOn) validateDate(flags.startOn, "start-on");
 
       body = {};
-      if (name) body["name"] = name;
+      if (name !== undefined) body["name"] = name;
       if (flags.assignee) body["assignee"] = flags.assignee;
       if (flags.due) body["due_on"] = flags.due;
       if (flags.startOn) body["start_on"] = flags.startOn;
-      if (notes) body["notes"] = notes;
+      if (notes !== undefined) body["notes"] = notes;
 
       if (Object.keys(body).length === 0) {
         throw new InputError(
@@ -149,7 +155,7 @@ export const updateCommand = buildCommand({
       method: "PUT",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "name",
         "gid",
         "completed",
@@ -157,7 +163,7 @@ export const updateCommand = buildCommand({
         "due_on",
         "notes",
         "permalink_url",
-      ],
+      ]),
     });
 
     this.process.stdout.write(

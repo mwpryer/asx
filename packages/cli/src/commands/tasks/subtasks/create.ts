@@ -17,6 +17,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -144,7 +145,7 @@ export const createCommand = buildCommand({
       method: "POST",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? ["name", "gid", "permalink_url"],
+      optFields: parseFields(flags.fields, ["name", "gid", "permalink_url"]),
     });
 
     this.process.stdout.write(

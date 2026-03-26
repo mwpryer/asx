@@ -1,10 +1,12 @@
 import {
   AsanaClient,
   InputError,
+  STATUS_COLOURS,
   formatJSON,
   hint,
   resolvePat,
   sanitizeText,
+  validateEnum,
   validateGid,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
@@ -16,6 +18,7 @@ import {
   dryRunFlag,
   fieldsFlag,
   jsonFlag,
+  parseFields,
   parseJsonInput,
   type AccountFlag,
   type DryRunFlag,
@@ -105,20 +108,7 @@ export const createCommand = buildCommand({
           "Provide a non-empty --title",
         );
       }
-      const validColours = [
-        "on_track",
-        "at_risk",
-        "off_track",
-        "on_hold",
-        "complete",
-      ];
-      if (flags.color && !validColours.includes(flags.color)) {
-        throw new InputError(
-          "INPUT_INVALID",
-          `Invalid colour: ${flags.color}`,
-          `Must be one of: ${validColours.join(", ")}`,
-        );
-      }
+      if (flags.color) validateEnum(flags.color, "color", STATUS_COLOURS);
       const text = flags.text ? sanitizeText(flags.text, "text") : undefined;
 
       body = { title };
@@ -144,14 +134,14 @@ export const createCommand = buildCommand({
       method: "POST",
       path,
       body,
-      optFields: flags.fields?.split(",") ?? [
+      optFields: parseFields(flags.fields, [
         "gid",
         "title",
         "color",
         "text",
         "created_by.name",
         "created_at",
-      ],
+      ]),
     });
 
     this.process.stdout.write(
