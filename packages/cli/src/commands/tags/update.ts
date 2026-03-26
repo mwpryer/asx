@@ -5,11 +5,10 @@ import {
   formatJSON,
   hint,
   resolvePat,
-  sanitizeText,
-  validateEnum,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -70,7 +69,7 @@ export const updateCommand = buildCommand({
       },
     tagGid: string,
   ) {
-    validateGid(tagGid, "tag-gid");
+    v.parse(s.gid("tag-gid"), tagGid);
 
     const hasValueFlags =
       flags.name !== undefined ||
@@ -92,17 +91,14 @@ export const updateCommand = buildCommand({
     } else {
       const name =
         flags.name !== undefined
-          ? sanitizeText(flags.name, "name", 1024)
+          ? v.parse(s.nonBlankText("name", 1024), flags.name)
           : undefined;
-      if (name !== undefined && !name) {
-        throw new InputError("INPUT_INVALID", "--name must not be empty");
-      }
       const notes =
         flags.notes !== undefined
-          ? sanitizeText(flags.notes, "notes")
+          ? v.parse(s.text("notes"), flags.notes)
           : undefined;
 
-      if (flags.color) validateEnum(flags.color, "color", PALETTE_COLOURS);
+      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
 
       body = {};
       if (name !== undefined) body["name"] = name;

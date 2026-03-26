@@ -6,12 +6,10 @@ import {
   formatJSON,
   resolveAuth,
   resolvePat,
-  sanitizeText,
-  validateDate,
-  validateEnum,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -133,24 +131,17 @@ export const createCommand = buildCommand({
           "Provide --name or use --json with a JSON object containing a name field",
         );
       }
-      const name = sanitizeText(flags.name, "name", 1024);
-      if (!name) {
-        throw new InputError(
-          "INPUT_INVALID",
-          "Invalid name: must not be blank",
-          "Provide a non-empty --name",
-        );
-      }
+      const name = v.parse(s.nonBlankText("name", 1024), flags.name);
       const notes = flags.notes
-        ? sanitizeText(flags.notes, "notes")
+        ? v.parse(s.text("notes"), flags.notes)
         : undefined;
-      if (flags.workspace) validateGid(flags.workspace, "workspace");
-      if (flags.team) validateGid(flags.team, "team");
-      if (flags.color) validateEnum(flags.color, "color", PALETTE_COLOURS);
-      if (flags.dueOn) validateDate(flags.dueOn, "due-on");
-      if (flags.startOn) validateDate(flags.startOn, "start-on");
+      if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
+      if (flags.team) v.parse(s.gid("team"), flags.team);
+      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
+      if (flags.dueOn) v.parse(s.date("due-on"), flags.dueOn);
+      if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
       if (flags.defaultView)
-        validateEnum(flags.defaultView, "default-view", PROJECT_VIEWS);
+        v.parse(s.enumOf("default-view", PROJECT_VIEWS), flags.defaultView);
 
       let workspace = flags.workspace;
       if (!workspace && !flags.dryRun) {

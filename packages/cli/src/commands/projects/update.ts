@@ -4,12 +4,10 @@ import {
   PALETTE_COLOURS,
   formatJSON,
   resolvePat,
-  sanitizeText,
-  validateDate,
-  validateEnum,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -98,7 +96,7 @@ export const updateCommand = buildCommand({
       },
     projectGid: string,
   ) {
-    validateGid(projectGid, "project-gid");
+    v.parse(s.gid("project-gid"), projectGid);
 
     if (flags.archive && flags.unarchive) {
       throw new InputError(
@@ -132,18 +130,15 @@ export const updateCommand = buildCommand({
     } else {
       const name =
         flags.name !== undefined
-          ? sanitizeText(flags.name, "name", 1024)
+          ? v.parse(s.nonBlankText("name", 1024), flags.name)
           : undefined;
-      if (name !== undefined && !name) {
-        throw new InputError("INPUT_INVALID", "--name must not be empty");
-      }
       const notes =
         flags.notes !== undefined
-          ? sanitizeText(flags.notes, "notes")
+          ? v.parse(s.text("notes"), flags.notes)
           : undefined;
-      if (flags.color) validateEnum(flags.color, "color", PALETTE_COLOURS);
-      if (flags.dueOn) validateDate(flags.dueOn, "due-on");
-      if (flags.startOn) validateDate(flags.startOn, "start-on");
+      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
+      if (flags.dueOn) v.parse(s.date("due-on"), flags.dueOn);
+      if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
 
       body = {};
       if (name !== undefined) body["name"] = name;

@@ -3,9 +3,10 @@ import {
   SECTION_FIELDS,
   formatJSON,
   resolvePat,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -36,7 +37,7 @@ export const getCommand = buildCommand({
     flags: AccountFlag & FieldsFlag,
     sectionGid: string,
   ) {
-    validateGid(sectionGid, "section-gid");
+    v.parse(s.gid("section-gid"), sectionGid);
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });

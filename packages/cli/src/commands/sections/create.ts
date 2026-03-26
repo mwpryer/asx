@@ -4,10 +4,10 @@ import {
   formatJSON,
   hint,
   resolvePat,
-  sanitizeText,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -65,7 +65,7 @@ export const createCommand = buildCommand({
       );
     }
 
-    if (flags.project) validateGid(flags.project, "project");
+    if (flags.project) v.parse(s.gid("project"), flags.project);
     const projectGid: string | undefined = flags.project;
 
     let body: Record<string, unknown>;
@@ -88,14 +88,7 @@ export const createCommand = buildCommand({
         );
       }
 
-      const name = sanitizeText(flags.name, "name", 1024);
-      if (!name) {
-        throw new InputError(
-          "INPUT_INVALID",
-          "Invalid name: must not be blank",
-          "Provide a non-empty --name",
-        );
-      }
+      const name = v.parse(s.nonBlankText("name", 1024), flags.name);
 
       body = { name };
     }

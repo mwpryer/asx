@@ -3,11 +3,10 @@ import {
   InputError,
   formatJSON,
   resolvePat,
-  sanitizeText,
-  validateDate,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -84,7 +83,7 @@ export const updateCommand = buildCommand({
       },
     taskGid: string,
   ) {
-    validateGid(taskGid, "task-gid");
+    v.parse(s.gid("task-gid"), taskGid);
 
     const hasValueFlags =
       flags.name !== undefined ||
@@ -108,19 +107,15 @@ export const updateCommand = buildCommand({
     } else {
       const name =
         flags.name !== undefined
-          ? sanitizeText(flags.name, "name", 1024)
+          ? v.parse(s.nonBlankText("name", 1024), flags.name)
           : undefined;
-      if (name !== undefined && !name) {
-        throw new InputError("INPUT_INVALID", "--name must not be empty");
-      }
       const notes =
         flags.notes !== undefined
-          ? sanitizeText(flags.notes, "notes")
+          ? v.parse(s.text("notes"), flags.notes)
           : undefined;
-      if (flags.assignee && flags.assignee !== "me")
-        validateGid(flags.assignee, "assignee");
-      if (flags.due) validateDate(flags.due, "due");
-      if (flags.startOn) validateDate(flags.startOn, "start-on");
+      if (flags.assignee) v.parse(s.assignee(), flags.assignee);
+      if (flags.due) v.parse(s.date("due"), flags.due);
+      if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
 
       body = {};
       if (name !== undefined) body["name"] = name;

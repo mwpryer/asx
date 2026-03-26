@@ -5,11 +5,10 @@ import {
   formatJSON,
   hint,
   resolvePat,
-  sanitizeText,
-  validateEnum,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -73,7 +72,7 @@ export const createCommand = buildCommand({
       },
     projectGid: string,
   ) {
-    validateGid(projectGid, "project-gid");
+    v.parse(s.gid("project-gid"), projectGid);
 
     const hasValueFlags =
       flags.title !== undefined ||
@@ -100,16 +99,9 @@ export const createCommand = buildCommand({
           "Provide --title or use --json with a JSON object containing a title field",
         );
       }
-      const title = sanitizeText(flags.title, "title", 1024);
-      if (!title) {
-        throw new InputError(
-          "INPUT_INVALID",
-          "Invalid title: must not be blank",
-          "Provide a non-empty --title",
-        );
-      }
-      if (flags.color) validateEnum(flags.color, "color", STATUS_COLOURS);
-      const text = flags.text ? sanitizeText(flags.text, "text") : undefined;
+      const title = v.parse(s.nonBlankText("title", 1024), flags.title);
+      if (flags.color) v.parse(s.enumOf("color", STATUS_COLOURS), flags.color);
+      const text = flags.text ? v.parse(s.text("text"), flags.text) : undefined;
 
       body = { title };
       if (flags.color) body["color"] = flags.color;

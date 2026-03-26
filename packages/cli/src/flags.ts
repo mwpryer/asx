@@ -1,4 +1,5 @@
-import { InputError, validateLimit, type AsanaResponse } from "@mwp13/asx-core";
+import { s, type AsanaResponse } from "@mwp13/asx-core";
+import * as v from "valibot";
 
 const DEFAULT_PAGE_LIMIT = 20;
 
@@ -57,7 +58,7 @@ export type JsonFlag = { json: string | undefined };
 
 export function resolveLimit(flags: PaginationFlags): number {
   if (flags.limit === undefined) return DEFAULT_PAGE_LIMIT;
-  return validateLimit(flags.limit);
+  return v.parse(s.limit(), flags.limit);
 }
 
 export function paginationMeta(res: AsanaResponse<unknown>) {
@@ -68,43 +69,9 @@ export function parseFields(
   raw: string | undefined,
   defaults: string[],
 ): string[] {
-  if (raw === undefined) return defaults;
-  const fields = raw
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  if (fields.length === 0) {
-    throw new InputError(
-      "INPUT_INVALID",
-      "--fields must not be empty",
-      "Provide comma-separated field names, or omit --fields to use defaults",
-    );
-  }
-  return fields;
+  return v.parse(s.fields(defaults), raw);
 }
 
 export function parseJsonInput(value: string): Record<string, unknown> {
-  try {
-    const parsed: unknown = JSON.parse(value);
-    if (
-      typeof parsed !== "object" ||
-      parsed === null ||
-      Array.isArray(parsed)
-    ) {
-      throw new InputError(
-        "INPUT_INVALID",
-        "JSON input must be an object, got " +
-          (Array.isArray(parsed) ? "array" : typeof parsed),
-        'Provide a JSON object like \'{"name": "Task name"}\'',
-      );
-    }
-    return parsed as Record<string, unknown>;
-  } catch (error) {
-    if (error instanceof InputError) throw error;
-    throw new InputError(
-      "INPUT_INVALID",
-      `Invalid JSON: ${error instanceof Error ? error.message : String(error)}`,
-      'Provide valid JSON, e.g. \'{"name": "Task name"}\'',
-    );
-  }
+  return v.parse(s.jsonInput(), value);
 }

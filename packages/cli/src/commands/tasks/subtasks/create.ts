@@ -4,11 +4,10 @@ import {
   formatJSON,
   hint,
   resolvePat,
-  sanitizeText,
-  validateDate,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -78,7 +77,7 @@ export const createCommand = buildCommand({
       },
     taskGid: string,
   ) {
-    validateGid(taskGid, "task-gid");
+    v.parse(s.gid("task-gid"), taskGid);
 
     const hasValueFlags =
       flags.name !== undefined ||
@@ -106,20 +105,12 @@ export const createCommand = buildCommand({
           "Provide --name or use --json with a JSON object containing a name field",
         );
       }
-      const name = sanitizeText(flags.name, "name", 1024);
-      if (!name) {
-        throw new InputError(
-          "INPUT_INVALID",
-          "Invalid name: must not be blank",
-          "Provide a non-empty --name",
-        );
-      }
+      const name = v.parse(s.nonBlankText("name", 1024), flags.name);
       const notes = flags.notes
-        ? sanitizeText(flags.notes, "notes")
+        ? v.parse(s.text("notes"), flags.notes)
         : undefined;
-      if (flags.assignee && flags.assignee !== "me")
-        validateGid(flags.assignee, "assignee");
-      if (flags.due) validateDate(flags.due, "due");
+      if (flags.assignee) v.parse(s.assignee(), flags.assignee);
+      if (flags.due) v.parse(s.date("due"), flags.due);
 
       body = { name };
       if (flags.assignee) body["assignee"] = flags.assignee;

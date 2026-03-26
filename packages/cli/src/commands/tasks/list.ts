@@ -3,9 +3,10 @@ import {
   InputError,
   formatJSON,
   resolvePat,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -67,8 +68,8 @@ export const listCommand = buildCommand({
       );
     }
 
-    if (flags.project) validateGid(flags.project, "project");
-    if (flags.section) validateGid(flags.section, "section");
+    if (flags.project) v.parse(s.gid("project"), flags.project);
+    if (flags.section) v.parse(s.gid("section"), flags.section);
 
     const path = flags.project
       ? `/projects/${flags.project}/tasks`

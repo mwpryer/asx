@@ -3,9 +3,10 @@ import {
   InputError,
   formatJSON,
   resolveAuth,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -58,8 +59,8 @@ export const listCommand = buildCommand({
         archived: boolean;
       },
   ) {
-    if (flags.workspace) validateGid(flags.workspace, "workspace");
-    if (flags.team) validateGid(flags.team, "team");
+    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
+    if (flags.team) v.parse(s.gid("team"), flags.team);
 
     const auth = resolveAuth({ account: flags.account });
 

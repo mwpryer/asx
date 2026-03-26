@@ -1,10 +1,6 @@
-import {
-  AsanaClient,
-  formatJSON,
-  resolvePat,
-  validateGid,
-} from "@mwp13/asx-core";
+import { AsanaClient, formatJSON, resolvePat, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -40,7 +36,7 @@ export const listCommand = buildCommand({
     flags: AccountFlag & FieldsFlag & PaginationFlags,
     projectGid: string,
   ) {
-    validateGid(projectGid, "project-gid");
+    v.parse(s.gid("project-gid"), projectGid);
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });

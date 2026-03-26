@@ -3,9 +3,10 @@ import {
   InputError,
   formatJSON,
   resolvePat,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -53,7 +54,7 @@ export const listCommand = buildCommand({
       );
     }
 
-    validateGid(flags.project, "project");
+    v.parse(s.gid("project"), flags.project);
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });

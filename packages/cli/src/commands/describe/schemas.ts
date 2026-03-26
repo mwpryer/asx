@@ -1144,7 +1144,12 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
     brief: "Duplicate a task",
     positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
     flags: [
-      { name: "name", type: "string", required: false, brief: "New task name" },
+      {
+        name: "name",
+        type: "string",
+        required: true,
+        brief: "New task name (required unless --json)",
+      },
       {
         name: "dry-run",
         type: "boolean",
@@ -1335,8 +1340,8 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       {
         name: "name",
         type: "string",
-        required: false,
-        brief: "New project name",
+        required: true,
+        brief: "New project name (required unless --json)",
       },
       {
         name: "dry-run",

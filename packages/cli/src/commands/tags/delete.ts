@@ -1,11 +1,6 @@
-import {
-  AsanaClient,
-  formatJSON,
-  hint,
-  resolvePat,
-  validateGid,
-} from "@mwp13/asx-core";
+import { AsanaClient, formatJSON, hint, resolvePat, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -33,7 +28,7 @@ export const deleteCommand = buildCommand({
     flags: AccountFlag & DryRunFlag,
     tagGid: string,
   ) {
-    validateGid(tagGid, "tag-gid");
+    v.parse(s.gid("tag-gid"), tagGid);
 
     const path = `/tags/${tagGid}`;
 

@@ -4,10 +4,10 @@ import {
   formatJSON,
   hint,
   resolvePat,
-  sanitizeText,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -54,7 +54,7 @@ export const addCommand = buildCommand({
       JsonFlag & { text: string | undefined },
     taskGid: string,
   ) {
-    validateGid(taskGid, "task-gid");
+    v.parse(s.gid("task-gid"), taskGid);
 
     if (flags.json && flags.text) {
       throw new InputError(
@@ -76,14 +76,7 @@ export const addCommand = buildCommand({
           "Provide --text or use --json with a JSON object",
         );
       }
-      const text = sanitizeText(flags.text, "text");
-      if (!text) {
-        throw new InputError(
-          "INPUT_INVALID",
-          "Invalid text: must not be blank",
-          "Provide non-empty --text",
-        );
-      }
+      const text = v.parse(s.nonBlankText("text"), flags.text);
       body = { text };
     }
 

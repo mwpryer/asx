@@ -3,10 +3,11 @@ import {
   InputError,
   hint,
   loadAccounts,
+  s,
   setAccount,
-  validateGid,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -57,7 +58,7 @@ export const addCommand = buildCommand({
     });
 
     if (flags.workspace) {
-      validateGid(flags.workspace, "workspace");
+      v.parse(s.gid("workspace"), flags.workspace);
       const memberGids = (res.data.workspaces ?? []).map((w) => w.gid);
       if (!memberGids.includes(flags.workspace)) {
         throw new InputError(

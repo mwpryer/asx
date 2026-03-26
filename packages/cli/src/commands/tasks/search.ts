@@ -3,10 +3,10 @@ import {
   InputError,
   formatJSON,
   resolveAuth,
-  validateDate,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -120,28 +120,25 @@ export const searchCommand = buildCommand({
       },
     query: string,
   ) {
-    if (flags.workspace) validateGid(flags.workspace, "workspace");
-    if (flags.assignee && flags.assignee !== "me")
-      validateGid(flags.assignee, "assignee");
-    if (flags.project) validateGid(flags.project, "project");
-    if (flags.tag) validateGid(flags.tag, "tag");
-    if (flags.section) validateGid(flags.section, "section");
-    if (flags.dueBefore) validateDate(flags.dueBefore, "due-before");
-    if (flags.dueAfter) validateDate(flags.dueAfter, "due-after");
-    const validSortValues = [
-      "due_date",
-      "created_at",
-      "completed_at",
-      "likes",
-      "modified_at",
-    ];
-    if (flags.sortBy && !validSortValues.includes(flags.sortBy)) {
-      throw new InputError(
-        "INPUT_INVALID",
-        `Invalid --sort-by value: "${flags.sortBy}"`,
-        `Must be one of: ${validSortValues.join(", ")}`,
+    v.parse(s.nonBlankText("query"), query);
+    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
+    if (flags.assignee) v.parse(s.assignee(), flags.assignee);
+    if (flags.project) v.parse(s.gid("project"), flags.project);
+    if (flags.tag) v.parse(s.gid("tag"), flags.tag);
+    if (flags.section) v.parse(s.gid("section"), flags.section);
+    if (flags.dueBefore) v.parse(s.date("due-before"), flags.dueBefore);
+    if (flags.dueAfter) v.parse(s.date("due-after"), flags.dueAfter);
+    if (flags.sortBy)
+      v.parse(
+        s.enumOf("sort-by", [
+          "due_date",
+          "created_at",
+          "completed_at",
+          "likes",
+          "modified_at",
+        ]),
+        flags.sortBy,
       );
-    }
 
     const auth = resolveAuth({ account: flags.account });
     const workspace = flags.workspace ?? auth.workspaceGid;

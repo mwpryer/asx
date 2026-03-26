@@ -4,10 +4,10 @@ import {
   formatJSON,
   hint,
   resolvePat,
-  sanitizeText,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -67,7 +67,7 @@ export const updateCommand = buildCommand({
       },
     customFieldGid: string,
   ) {
-    validateGid(customFieldGid, "custom-field-gid");
+    v.parse(s.gid("custom-field-gid"), customFieldGid);
 
     const hasValueFlags =
       flags.name !== undefined || flags.description !== undefined;
@@ -87,14 +87,11 @@ export const updateCommand = buildCommand({
     } else {
       const name =
         flags.name !== undefined
-          ? sanitizeText(flags.name, "name", 1024)
+          ? v.parse(s.nonBlankText("name", 1024), flags.name)
           : undefined;
-      if (name !== undefined && !name) {
-        throw new InputError("INPUT_INVALID", "--name must not be empty");
-      }
       const description =
         flags.description !== undefined
-          ? sanitizeText(flags.description, "description")
+          ? v.parse(s.text("description"), flags.description)
           : undefined;
 
       body = {};

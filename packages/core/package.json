@@ -32,6 +32,9 @@
     "dev": "tsup --watch",
     "test": "vitest run"
   },
+  "dependencies": {
+    "valibot": "^1.3.1"
+  },
   "devDependencies": {
     "@stricli/core": "^1.2.0",
     "@types/node": "^22.0.0",

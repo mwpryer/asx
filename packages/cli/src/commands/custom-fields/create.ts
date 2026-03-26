@@ -4,10 +4,10 @@ import {
   formatJSON,
   hint,
   resolveAuth,
-  sanitizeText,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -84,7 +84,7 @@ export const createCommand = buildCommand({
       );
     }
 
-    if (flags.workspace) validateGid(flags.workspace, "workspace");
+    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
 
     let body: Record<string, unknown>;
     let workspace: string | undefined;
@@ -106,24 +106,13 @@ export const createCommand = buildCommand({
           "Provide --resource-subtype (text, number, or enum)",
         );
       }
-      const validSubtypes = ["text", "number", "enum"];
-      if (!validSubtypes.includes(flags.resourceSubtype)) {
-        throw new InputError(
-          "INPUT_INVALID",
-          `Invalid resource-subtype: ${flags.resourceSubtype}`,
-          `Must be one of: ${validSubtypes.join(", ")}`,
-        );
-      }
-      const name = sanitizeText(flags.name, "name", 1024);
-      if (!name) {
-        throw new InputError(
-          "INPUT_INVALID",
-          "Invalid name: must not be blank",
-          "Provide a non-empty --name",
-        );
-      }
+      v.parse(
+        s.enumOf("resource-subtype", ["text", "number", "enum"]),
+        flags.resourceSubtype,
+      );
+      const name = v.parse(s.nonBlankText("name", 1024), flags.name);
       const description = flags.description
-        ? sanitizeText(flags.description, "description")
+        ? v.parse(s.text("description"), flags.description)
         : undefined;
 
       body = { name, resource_subtype: flags.resourceSubtype };

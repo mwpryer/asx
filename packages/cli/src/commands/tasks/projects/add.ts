@@ -1,11 +1,6 @@
-import {
-  AsanaClient,
-  formatJSON,
-  hint,
-  resolvePat,
-  validateGid,
-} from "@mwp13/asx-core";
+import { AsanaClient, formatJSON, hint, resolvePat, s } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -43,9 +38,9 @@ export const addCommand = buildCommand({
     taskGid: string,
     projectGid: string,
   ) {
-    validateGid(taskGid, "task-gid");
-    validateGid(projectGid, "project-gid");
-    if (flags.section) validateGid(flags.section, "section");
+    v.parse(s.gid("task-gid"), taskGid);
+    v.parse(s.gid("project-gid"), projectGid);
+    if (flags.section) v.parse(s.gid("section"), flags.section);
 
     const path = `/tasks/${taskGid}/addProject`;
     const body: Record<string, string> = { project: projectGid };

@@ -6,11 +6,10 @@ import {
   hint,
   resolveAuth,
   resolvePat,
-  sanitizeText,
-  validateEnum,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -99,26 +98,19 @@ export const createCommand = buildCommand({
           "Provide --name or use --json with a JSON object containing a name field",
         );
       }
-      const name = sanitizeText(flags.name, "name", 1024);
-      if (!name) {
-        throw new InputError(
-          "INPUT_INVALID",
-          "Invalid name: must not be blank",
-          "Provide a non-empty --name",
-        );
-      }
+      const name = v.parse(s.nonBlankText("name", 1024), flags.name);
       const notes = flags.notes
-        ? sanitizeText(flags.notes, "notes")
+        ? v.parse(s.text("notes"), flags.notes)
         : undefined;
 
-      if (flags.color) validateEnum(flags.color, "color", PALETTE_COLOURS);
+      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
 
       body = { name };
       if (flags.color) body["color"] = flags.color;
       if (notes) body["notes"] = notes;
     }
 
-    if (flags.workspace) validateGid(flags.workspace, "workspace");
+    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
     let workspace = flags.workspace;
     if (!workspace && !flags.dryRun) {
       const auth = resolveAuth({ account: flags.account });

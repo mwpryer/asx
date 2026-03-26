@@ -3,9 +3,10 @@ import {
   TAG_FIELDS,
   formatJSON,
   resolvePat,
-  validateGid,
+  s,
 } from "@mwp13/asx-core";
 import { buildCommand } from "@stricli/core";
+import * as v from "valibot";
 
 import { asxFunc } from "@/command";
 import type { AsxCliContext } from "@/context";
@@ -34,7 +35,7 @@ export const getCommand = buildCommand({
     flags: AccountFlag & FieldsFlag,
     tagGid: string,
   ) {
-    validateGid(tagGid, "tag-gid");
+    v.parse(s.gid("tag-gid"), tagGid);
 
     const pat = resolvePat({ account: flags.account });
     const client = new AsanaClient({ pat });
