@@ -3,12 +3,12 @@ import type { AsxCliContext } from "@/context";
 
 let capturedExitCode: number | undefined;
 
-// Return exit code captured by asxFunc, if any
+// Return captured exit code
 export function getCapturedExitCode(): number | undefined {
   return capturedExitCode;
 }
 
-// Catches AsxError, writes JSON (piped) or text (TTY) to stdout, stashes exit code
+// Catch AsxError, write JSON (piped) or text (TTY) to stdout, stash exit code
 export function asxFunc<
   T extends (this: AsxCliContext, ...args: never[]) => Promise<void>,
 >(fn: T): T {

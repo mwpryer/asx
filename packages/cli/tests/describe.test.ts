@@ -12,7 +12,6 @@ import { describeCommand } from "@/commands/describe/describe";
 import { COMMAND_SCHEMAS } from "@/commands/describe/schemas";
 import { createMockContext, loadCommand, parseOutput } from "./helpers";
 
-// COMMAND_SCHEMAS completeness
 describe("COMMAND_SCHEMAS completeness", () => {
   const expectedCommands = [
     "auth.add",
@@ -77,7 +76,6 @@ describe("COMMAND_SCHEMAS completeness", () => {
   });
 });
 
-// Field registries completeness
 describe("field registries", () => {
   const resourceFields: Record<string, readonly string[]> = {
     task: TASK_FIELDS,
@@ -101,7 +99,6 @@ describe("field registries", () => {
   }
 });
 
-// Describe command output format
 describe("describe command output", () => {
   it("no args outputs commands and resources with _meta envelope", async () => {
     const ctx = createMockContext();

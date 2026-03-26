@@ -8,7 +8,6 @@ import { createCommand } from "@/commands/tasks/create";
 import { updateCommand } from "@/commands/tasks/update";
 import { createMockContext, loadCommand, parseOutput } from "./helpers";
 
-// parseJsonInput
 describe("parseJsonInput", () => {
   it("returns parsed object for valid JSON", () => {
     const result = parseJsonInput('{"name": "Test task"}');
@@ -59,7 +58,6 @@ describe("parseJsonInput", () => {
   });
 });
 
-// --dry-run output format
 describe("--dry-run output", () => {
   it("tasks create outputs _meta.dry_run, method, path, body", async () => {
     const ctx = createMockContext();
@@ -155,7 +153,6 @@ describe("--dry-run output", () => {
   });
 });
 
-// --json and value flags mutual exclusivity
 describe("--json and value flags mutual exclusivity", () => {
   it("tasks create writes INPUT_INVALID to stdout when --json and --name both set", async () => {
     const ctx = createMockContext();
@@ -226,7 +223,6 @@ describe("--json and value flags mutual exclusivity", () => {
   });
 });
 
-// --json and --dry-run coexistence
 describe("--json and --dry-run coexistence", () => {
   it("tasks create preview shows the raw JSON payload", async () => {
     const ctx = createMockContext();

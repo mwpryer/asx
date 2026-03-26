@@ -1,4 +1,4 @@
-// Field registries for Asana resource types, used by describe command
+// Asana resource field registries for Describe
 export const TASK_FIELDS = [
   "gid",
   "name",

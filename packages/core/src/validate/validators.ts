@@ -2,7 +2,7 @@ import { InputError } from "@/errors/errors";
 
 const GID_PATTERN = /^[1-9]\d*$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
-// ASCII control characters except \t (0x09) and \n (0x0A)
+// ASCII control chars except \t (0x09), \n (0x0A)
 // oxlint-disable-next-line no-control-regex (intentional: detecting unwanted control chars in input)
 const CONTROL_CHAR_PATTERN = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/;
 

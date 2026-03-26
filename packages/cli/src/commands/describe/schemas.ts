@@ -1,4 +1,4 @@
-// Command schema metadata for CLI introspection
+// Command schemas for CLI introspection
 export interface FlagSchema {
   readonly name: string;
   readonly type: "string" | "boolean" | "number";
