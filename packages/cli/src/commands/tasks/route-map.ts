@@ -2,7 +2,7 @@ import { buildRouteMap } from "@stricli/core";
 
 import { addProjectCommand } from "@/commands/tasks/add-project";
 import { addTagCommand } from "@/commands/tasks/add-tag";
-import { commentCommand } from "@/commands/tasks/comment";
+import { commentsCommand } from "@/commands/tasks/comments";
 import { completeCommand } from "@/commands/tasks/complete";
 import { createCommand } from "@/commands/tasks/create";
 import { deleteCommand } from "@/commands/tasks/delete";
@@ -14,6 +14,7 @@ import { listCommand } from "@/commands/tasks/list";
 import { removeProjectCommand } from "@/commands/tasks/remove-project";
 import { removeTagCommand } from "@/commands/tasks/remove-tag";
 import { searchCommand } from "@/commands/tasks/search";
+import { storiesCommand } from "@/commands/tasks/stories";
 import { subtasksCommand } from "@/commands/tasks/subtasks";
 import { updateCommand } from "@/commands/tasks/update";
 
@@ -26,7 +27,8 @@ export const tasksRouteMap = buildRouteMap({
     update: updateCommand,
     complete: completeCommand,
     delete: deleteCommand,
-    comment: commentCommand,
+    comments: commentsCommand,
+    stories: storiesCommand,
     subtasks: subtasksCommand,
     dependencies: dependenciesCommand,
     followers: followersCommand,

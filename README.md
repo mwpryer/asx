@@ -99,7 +99,7 @@ These flags appear on multiple commands:
 | `--account <alias>` | All commands that call the API                                                             | Account to use (see [Resolution order](#resolution-order))  |
 | `--fields <fields>` | All resource-returning commands (`tasks`, `projects`, `workspaces`, `custom-fields`, etc.) | Comma-separated field names to return (overrides defaults)  |
 | `--dry-run`         | Mutating commands (create, update, delete, duplicate, etc.)                                | Preview the request without sending it                      |
-| `--json <json>`     | Mutating commands that accept a body (`create`, `update`, `comment`)                       | Raw JSON request body (mutually exclusive with value flags) |
+| `--json <json>`     | Mutating commands that accept a body (`create`, `update`, `comments`)                      | Raw JSON request body (mutually exclusive with value flags) |
 
 ### `asx describe` - Schema introspection
 
@@ -140,7 +140,8 @@ asx auth status --account work
 | `asx tasks update <gid>`                        | Update a task                      |
 | `asx tasks complete <gid>`                      | Mark a task as completed           |
 | `asx tasks delete <gid>`                        | Delete a task                      |
-| `asx tasks comment <gid> --text <text>`         | Add a comment to a task            |
+| `asx tasks comments <gid>`                      | List or add comments on a task     |
+| `asx tasks stories <gid>`                       | List all stories on a task         |
 | `asx tasks subtasks <gid>`                      | List subtasks of a task            |
 | `asx tasks duplicate <gid> --name <name>`       | Duplicate a task                   |
 | `asx tasks dependencies <gid>`                  | List, add, or remove dependencies  |
@@ -156,7 +157,9 @@ asx tasks list --project 1201234567890123 # list tasks in a project
 asx tasks create --name "Fix login" --project 1201234567890123 --assignee me --due 2026-03-15 --notes "See ticket #42"
 asx tasks update 1205678901234567 --name "Fix login flow" --due 2026-03-20
 asx tasks complete 1205678901234567
-asx tasks comment 1205678901234567 --text "Done, deployed to staging"
+asx tasks comments 1205678901234567                   # list comments
+asx tasks comments 1205678901234567 --text "Done, deployed to staging" # add a comment
+asx tasks stories 1205678901234567                    # list all stories (comments + system events)
 asx tasks add-project 1205678901234567 --project 1201234567890456 --section 1203456789012345
 asx tasks add-tag 1205678901234567 --tag 1207890123456789
 ```
@@ -372,7 +375,7 @@ Use `asx describe task` to discover available fields for a resource type.
 
 ### Dry-run mode (`--dry-run`)
 
-Preview mutation requests without sending them. No auth required. Available on all mutating commands (create, update, delete, duplicate, complete, comment, add-project, etc.).
+Preview mutation requests without sending them. No auth required. Available on all mutating commands (create, update, delete, duplicate, complete, comments, add-project, etc.).
 
 ```bash
 asx tasks create --name "Deploy v2" --project 1201234567890123 --dry-run

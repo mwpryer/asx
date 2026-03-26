@@ -390,15 +390,27 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
       },
     ],
   },
-  "tasks.comment": {
-    brief: "Add a comment to a task",
+  "tasks.comments": {
+    brief: "List or add comments on a task",
     positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
     flags: [
       {
         name: "text",
         type: "string",
         required: false,
-        brief: "Comment text",
+        brief: "Comment text (triggers add mode)",
+      },
+      {
+        name: "limit",
+        type: "number",
+        required: false,
+        brief: "Max results to return (1-100)",
+      },
+      {
+        name: "offset",
+        type: "string",
+        required: false,
+        brief: "Pagination offset from a previous response",
       },
       {
         name: "dry-run",
@@ -411,6 +423,36 @@ export const COMMAND_SCHEMAS: Record<string, CommandSchema> = {
         type: "string",
         required: false,
         brief: "Raw JSON request body (mutually exclusive with --text)",
+      },
+      {
+        name: "fields",
+        type: "string",
+        required: false,
+        brief: "Comma-separated field names to return (overrides defaults)",
+      },
+      {
+        name: "account",
+        type: "string",
+        required: false,
+        brief: "Account alias to use",
+      },
+    ],
+  },
+  "tasks.stories": {
+    brief: "List all stories on a task",
+    positional: [{ name: "task-gid", type: "string", brief: "Task GID" }],
+    flags: [
+      {
+        name: "limit",
+        type: "number",
+        required: false,
+        brief: "Max results to return (1-100)",
+      },
+      {
+        name: "offset",
+        type: "string",
+        required: false,
+        brief: "Pagination offset from a previous response",
       },
       {
         name: "fields",

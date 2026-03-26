@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 
 import { InputError } from "@mwp13/asx-core";
 import { parseJsonInput } from "@/flags";
-import { commentCommand } from "@/commands/tasks/comment";
+import { commentsCommand } from "@/commands/tasks/comments";
 import { completeCommand } from "@/commands/tasks/complete";
 import { createCommand } from "@/commands/tasks/create";
 import { updateCommand } from "@/commands/tasks/update";
@@ -132,9 +132,9 @@ describe("--dry-run output", () => {
     expect(out["body"]).toEqual({ completed: true });
   });
 
-  it("tasks comment outputs _meta.dry_run, method, path, body", async () => {
+  it("tasks comments outputs _meta.dry_run, method, path, body", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(commentCommand);
+    const func = await loadCommand(commentsCommand);
     await func.call(
       ctx,
       {
@@ -204,9 +204,9 @@ describe("--json and value flags mutual exclusivity", () => {
     );
   });
 
-  it("tasks comment writes INPUT_INVALID to stdout when --json and text both provided", async () => {
+  it("tasks comments writes INPUT_INVALID to stdout when --json and text both provided", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(commentCommand);
+    const func = await loadCommand(commentsCommand);
     await func.call(
       ctx,
       {
@@ -292,9 +292,9 @@ describe("--json and --dry-run coexistence", () => {
     expect(out["body"]).toEqual({ completed: true, custom: 1 });
   });
 
-  it("tasks comment preview shows the raw JSON payload", async () => {
+  it("tasks comments preview shows the raw JSON payload", async () => {
     const ctx = createMockContext();
-    const func = await loadCommand(commentCommand);
+    const func = await loadCommand(commentsCommand);
     await func.call(
       ctx,
       {

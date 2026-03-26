@@ -52,7 +52,8 @@ asx tasks search "bug" --account work
 | `asx tasks update <task-gid>`         | Update a task                      | Yes      |
 | `asx tasks complete <task-gid>`       | Mark a task complete               | Yes      |
 | `asx tasks delete <task-gid>`         | Delete a task                      | Yes      |
-| `asx tasks comment <task-gid>`        | Add a comment to a task            | Yes      |
+| `asx tasks comments <task-gid>`       | List or add comments on a task     | Mixed    |
+| `asx tasks stories <task-gid>`        | List all stories on a task         | No       |
 | `asx tasks duplicate <task-gid>`      | Duplicate a task                   | Yes      |
 | `asx tasks dependencies <task-gid>`   | List/add/remove dependencies       | Mixed    |
 | `asx tasks followers <task-gid>`      | Add/remove followers               | Yes      |
@@ -108,11 +109,20 @@ asx tasks delete 1234567890
 asx tasks create --name "Test" --project 123 --dry-run
 ```
 
-### Comments
+### Comments and stories
 
 ```sh
-asx tasks comment 1234567890 --text "Deployed to staging"
-asx tasks comment 1234567890 --json '{"html_text":"<body>See <a href=\"...\">link</a></body>"}'
+# List comments (no flags = list, filtered to resource_subtype: comment_added)
+asx tasks comments 1234567890
+asx tasks comments 1234567890 --limit 50
+
+# Add a comment (--text or --json triggers add mode)
+asx tasks comments 1234567890 --text "Deployed to staging"
+asx tasks comments 1234567890 --json '{"html_text":"<body>See <a href=\"...\">link</a></body>"}'
+
+# List all stories (comments + system events like assignments, status changes)
+asx tasks stories 1234567890
+asx tasks stories 1234567890 --limit 50
 ```
 
 ### Relationships
@@ -145,7 +155,8 @@ asx tasks duplicate 1234567890 --name "Copy of task"
 - `--assignee` accepts `"me"` or a numeric user GID.
 - `tasks search` requires a workspace (stored or `--workspace`).
 - `tasks list` requires exactly one of `--project` or `--section`.
-- `tasks comment` uses `--text` flag (not a positional arg).
+- `tasks comments` with no flags lists; with `--text`/`--json` adds a comment.
+- `tasks comments` returns only user comments; `tasks stories` returns all activity (comments, assignments, project additions, etc.).
 - `tasks dependencies` with no flags lists; with `--add`/`--remove` mutates.
 - `tasks followers` requires exactly one of `--add` or `--remove`.
 - Dates must be `YYYY-MM-DD`. GIDs must be numeric.
@@ -252,14 +263,14 @@ asx custom-fields get 1234567890 --fields name,resource_subtype,enum_options.nam
 
 ## Common flags
 
-| Flag                | Used on                        | Description                                         |
-| ------------------- | ------------------------------ | --------------------------------------------------- |
-| `--account <alias>` | All commands                   | Select which stored account to use                  |
-| `--fields <csv>`    | Read commands                  | Override default opt_fields                         |
-| `--limit <1-100>`   | Paginated reads                | Results per page (default 20)                       |
-| `--offset <token>`  | Paginated reads                | Pagination token from previous response             |
-| `--dry-run`         | All mutations                  | Preview the request without sending it              |
-| `--json <body>`     | create/update/complete/comment | Raw JSON body (mutually exclusive with value flags) |
+| Flag                | Used on                         | Description                                         |
+| ------------------- | ------------------------------- | --------------------------------------------------- |
+| `--account <alias>` | All commands                    | Select which stored account to use                  |
+| `--fields <csv>`    | Read commands                   | Override default opt_fields                         |
+| `--limit <1-100>`   | Paginated reads                 | Results per page (default 20)                       |
+| `--offset <token>`  | Paginated reads                 | Pagination token from previous response             |
+| `--dry-run`         | All mutations                   | Preview the request without sending it              |
+| `--json <body>`     | create/update/complete/comments | Raw JSON body (mutually exclusive with value flags) |
 
 ## Errors
 
