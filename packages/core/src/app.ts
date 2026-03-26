@@ -23,10 +23,26 @@ export function buildAsxApp<C extends CommandContext>(
     name: opts.name,
     versionInfo: { currentVersion: opts.version },
     scanner: { caseStyle: "allow-kebab-for-camel" },
+    documentation: { disableAnsiColor: true },
     determineExitCode: (err) => (err instanceof AsxError ? err.exitCode : 1),
     localization: {
       loadText: () => ({
         ...text_en,
+        exceptionWhileParsingArguments: (exc: unknown) =>
+          exc instanceof Error ? exc.message : String(exc),
+        noCommandRegisteredForInput: ({
+          input,
+          corrections,
+        }: {
+          input: string;
+          corrections: readonly string[];
+        }) => {
+          let msg = `No command registered for "${input}"`;
+          if (corrections.length > 0) {
+            msg += `, did you mean ${corrections.join(" or ")}?`;
+          }
+          return msg;
+        },
         exceptionWhileRunningCommand: (err: unknown) => formatAsxError(err),
         commandErrorResult: (err: unknown) => formatAsxError(err),
       }),
