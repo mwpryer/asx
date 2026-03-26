@@ -19,6 +19,10 @@ const { listCommand: storiesListCommand } =
   await import("@/commands/tasks/stories/list");
 const { listCommand: commentsListCommand } =
   await import("@/commands/tasks/comments/list");
+const { getCommand: customFieldsGetCommand } =
+  await import("@/commands/custom-fields/get");
+const { listCommand: customFieldsListCommand } =
+  await import("@/commands/custom-fields/list");
 
 beforeEach(() => {
   mockRequest.mockReset();
@@ -171,6 +175,60 @@ describe("tasks comments", () => {
       },
       "bad",
     );
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+});
+
+describe("custom-fields get", () => {
+  it("rejects non-numeric GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(customFieldsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "abc");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects empty GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(customFieldsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("rejects GID starting with zero", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(customFieldsGetCommand);
+    await func.call(ctx, { account: undefined, fields: undefined }, "0123");
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+});
+
+describe("custom-fields list", () => {
+  it("rejects non-numeric workspace GID", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(customFieldsListCommand);
+    await func.call(ctx, {
+      account: undefined,
+      fields: undefined,
+      workspace: "bad",
+      limit: undefined,
+      offset: undefined,
+    });
     const out = parseOutput(ctx);
     expect(out["error"]).toBeDefined();
     expect((out["error"] as Record<string, unknown>)["code"]).toBe(

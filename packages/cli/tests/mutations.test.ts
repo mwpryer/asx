@@ -3,8 +3,10 @@ import { describe, it, expect } from "vitest";
 import { InputError } from "@mwp13/asx-core";
 import { parseJsonInput } from "@/flags";
 import { addCommand as commentsAddCommand } from "@/commands/tasks/comments/add";
+import { removeCommand as commentsRemoveCommand } from "@/commands/tasks/comments/remove";
 import { completeCommand } from "@/commands/tasks/complete";
 import { createCommand } from "@/commands/tasks/create";
+import { createCommand as subtasksCreateCommand } from "@/commands/tasks/subtasks/create";
 import { updateCommand } from "@/commands/tasks/update";
 import { createMockContext, loadCommand, parseOutput } from "./helpers";
 
@@ -130,7 +132,7 @@ describe("--dry-run output", () => {
     expect(out["body"]).toEqual({ completed: true });
   });
 
-  it("tasks comments outputs _meta.dry_run, method, path, body", async () => {
+  it("tasks comments add outputs _meta.dry_run, method, path, body", async () => {
     const ctx = createMockContext();
     const func = await loadCommand(commentsAddCommand);
     await func.call(
@@ -150,6 +152,53 @@ describe("--dry-run output", () => {
     expect(out["method"]).toBe("POST");
     expect(out["path"]).toBe("/tasks/12345/stories");
     expect(out["body"]).toEqual({ text: "Hello world" });
+  });
+
+  it("tasks comments remove outputs _meta.dry_run, method, path", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(commentsRemoveCommand);
+    await func.call(
+      ctx,
+      {
+        dryRun: true,
+        account: undefined,
+      },
+      "99999",
+    );
+    const out = parseOutput(ctx);
+    const meta = out["_meta"] as Record<string, unknown>;
+    expect(meta["dry_run"]).toBe(true);
+    expect(meta["command"]).toBe("tasks.comments.remove");
+    expect(out["method"]).toBe("DELETE");
+    expect(out["path"]).toBe("/stories/99999");
+  });
+
+  it("tasks subtasks create outputs _meta.dry_run, method, path, body", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(subtasksCreateCommand);
+    await func.call(
+      ctx,
+      {
+        name: "My subtask",
+        dryRun: true,
+        account: undefined,
+        fields: undefined,
+        json: undefined,
+        assignee: undefined,
+        due: undefined,
+        notes: undefined,
+      },
+      "12345",
+    );
+    const out = parseOutput(ctx);
+    const meta = out["_meta"] as Record<string, unknown>;
+    expect(meta["dry_run"]).toBe(true);
+    expect(meta["command"]).toBe("tasks.subtasks.create");
+    expect(out["method"]).toBe("POST");
+    expect(out["path"]).toBe("/tasks/12345/subtasks");
+    expect(out["body"]).toEqual(
+      expect.objectContaining({ name: "My subtask" }),
+    );
   });
 });
 
@@ -201,7 +250,7 @@ describe("--json and value flags mutual exclusivity", () => {
     );
   });
 
-  it("tasks comments writes INPUT_INVALID to stdout when --json and text both provided", async () => {
+  it("tasks comments add writes INPUT_INVALID to stdout when --json and text both provided", async () => {
     const ctx = createMockContext();
     const func = await loadCommand(commentsAddCommand);
     await func.call(
@@ -212,6 +261,30 @@ describe("--json and value flags mutual exclusivity", () => {
         dryRun: false,
         account: undefined,
         fields: undefined,
+      },
+      "12345",
+    );
+    const out = parseOutput(ctx);
+    expect(out["error"]).toBeDefined();
+    expect((out["error"] as Record<string, unknown>)["code"]).toBe(
+      "INPUT_INVALID",
+    );
+  });
+
+  it("tasks subtasks create writes INPUT_INVALID to stdout when --json and --name both set", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(subtasksCreateCommand);
+    await func.call(
+      ctx,
+      {
+        name: "Conflict",
+        json: '{"name": "Other"}',
+        dryRun: false,
+        account: undefined,
+        fields: undefined,
+        assignee: undefined,
+        due: undefined,
+        notes: undefined,
       },
       "12345",
     );
@@ -288,7 +361,7 @@ describe("--json and --dry-run coexistence", () => {
     expect(out["body"]).toEqual({ completed: true, custom: 1 });
   });
 
-  it("tasks comments preview shows the raw JSON payload", async () => {
+  it("tasks comments add preview shows the raw JSON payload", async () => {
     const ctx = createMockContext();
     const func = await loadCommand(commentsAddCommand);
     await func.call(
@@ -305,5 +378,28 @@ describe("--json and --dry-run coexistence", () => {
     const meta = out["_meta"] as Record<string, unknown>;
     expect(meta["dry_run"]).toBe(true);
     expect(out["body"]).toEqual({ text: "Comment via JSON" });
+  });
+
+  it("tasks subtasks create preview shows the raw JSON payload", async () => {
+    const ctx = createMockContext();
+    const func = await loadCommand(subtasksCreateCommand);
+    await func.call(
+      ctx,
+      {
+        json: '{"name": "Subtask via JSON", "notes": "details"}',
+        dryRun: true,
+        account: undefined,
+        fields: undefined,
+        name: undefined,
+        assignee: undefined,
+        due: undefined,
+        notes: undefined,
+      },
+      "12345",
+    );
+    const out = parseOutput(ctx);
+    const meta = out["_meta"] as Record<string, unknown>;
+    expect(meta["dry_run"]).toBe(true);
+    expect(out["body"]).toEqual({ name: "Subtask via JSON", notes: "details" });
   });
 });

@@ -19,7 +19,7 @@ import {
   type PaginationFlags,
 } from "@/flags";
 
-export const subtasksCommand = buildCommand({
+export const listCommand = buildCommand({
   docs: { brief: "List subtasks of a task" },
   parameters: {
     positional: {
@@ -60,7 +60,7 @@ export const subtasksCommand = buildCommand({
     this.process.stdout.write(
       formatJSON(
         { subtasks: res.data },
-        { command: "tasks.subtasks", pagination: paginationMeta(res) },
+        { command: "tasks.subtasks.list", pagination: paginationMeta(res) },
       ) + "\n",
     );
   }),

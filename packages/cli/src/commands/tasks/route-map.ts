@@ -12,7 +12,7 @@ import { listCommand } from "@/commands/tasks/list";
 import { projectsRouteMap } from "@/commands/tasks/projects/route-map";
 import { searchCommand } from "@/commands/tasks/search";
 import { storiesRouteMap } from "@/commands/tasks/stories/route-map";
-import { subtasksCommand } from "@/commands/tasks/subtasks";
+import { subtasksRouteMap } from "@/commands/tasks/subtasks/route-map";
 import { tagsRouteMap } from "@/commands/tasks/tags/route-map";
 import { updateCommand } from "@/commands/tasks/update";
 
@@ -28,7 +28,7 @@ export const tasksRouteMap = buildRouteMap({
     duplicate: duplicateCommand,
     comments: commentsRouteMap,
     stories: storiesRouteMap,
-    subtasks: subtasksCommand,
+    subtasks: subtasksRouteMap,
     dependencies: dependenciesRouteMap,
     followers: followersRouteMap,
     projects: projectsRouteMap,
