@@ -1,6 +1,6 @@
 {
   "name": "@mwp13/asx-core",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "description": "Asana client, auth, errors, output, and types for asx",
   "license": "MIT",

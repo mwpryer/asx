@@ -3,7 +3,7 @@ name: asx
 description: Drive the asx Asana CLI to manage tasks, projects, tags, sections, teams, workspaces, users, custom fields, and authentication. Use when the user asks about Asana tasks, projects, tags, sections, teams, custom fields, or account setup.
 compatibility: Requires asx CLI (npm i -g @mwp13/asx)
 metadata:
-  version: "0.0.2"
+  version: "0.1.0"
 ---
 
 # asx CLI
