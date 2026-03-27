@@ -62,7 +62,7 @@ export const duplicateCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.name) {
+      if (flags.name === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--name is required when not using --json",

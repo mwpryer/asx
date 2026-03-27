@@ -90,11 +90,12 @@ export const updateCommand = buildCommand({
           ? v.parse(s.text("notes"), flags.notes)
           : undefined;
 
-      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
+      if (flags.color !== undefined)
+        v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
 
       body = {};
       if (name !== undefined) body["name"] = name;
-      if (flags.color) body["color"] = flags.color;
+      if (flags.color !== undefined) body["color"] = flags.color;
       if (notes !== undefined) body["notes"] = notes;
 
       if (Object.keys(body).length === 0) {

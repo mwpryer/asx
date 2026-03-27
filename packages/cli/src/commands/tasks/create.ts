@@ -107,7 +107,7 @@ export const createCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.name) {
+      if (flags.name === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--name is required when not using --json",
@@ -115,16 +115,18 @@ export const createCommand = buildCommand({
         );
       }
       const name = v.parse(s.nonBlankText("name", 1024), flags.name);
-      const notes = flags.notes
-        ? v.parse(s.text("notes"), flags.notes)
-        : undefined;
-      if (flags.project) v.parse(s.gid("project"), flags.project);
-      if (flags.parent) v.parse(s.gid("parent"), flags.parent);
-      if (flags.assignee) v.parse(s.assignee(), flags.assignee);
-      if (flags.due) v.parse(s.date("due"), flags.due);
-      if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
+      const notes =
+        flags.notes !== undefined
+          ? v.parse(s.text("notes"), flags.notes)
+          : undefined;
+      if (flags.project !== undefined) v.parse(s.gid("project"), flags.project);
+      if (flags.parent !== undefined) v.parse(s.gid("parent"), flags.parent);
+      if (flags.assignee !== undefined) v.parse(s.assignee(), flags.assignee);
+      if (flags.due !== undefined) v.parse(s.date("due"), flags.due);
+      if (flags.startOn !== undefined)
+        v.parse(s.date("start-on"), flags.startOn);
 
-      if (flags.parent && flags.project) {
+      if (flags.parent !== undefined && flags.project !== undefined) {
         throw new InputError(
           "INPUT_INVALID",
           "--parent and --project cannot be used together",
@@ -133,9 +135,9 @@ export const createCommand = buildCommand({
       }
 
       body = { name };
-      if (flags.parent) {
+      if (flags.parent !== undefined) {
         body["parent"] = flags.parent;
-      } else if (flags.project) {
+      } else if (flags.project !== undefined) {
         body["projects"] = [flags.project];
       } else if (!flags.dryRun) {
         const auth = resolveAuth({ account: flags.account });
@@ -149,10 +151,10 @@ export const createCommand = buildCommand({
           );
         }
       }
-      if (flags.assignee) body["assignee"] = flags.assignee;
-      if (flags.due) body["due_on"] = flags.due;
-      if (flags.startOn) body["start_on"] = flags.startOn;
-      if (notes) body["notes"] = notes;
+      if (flags.assignee !== undefined) body["assignee"] = flags.assignee;
+      if (flags.due !== undefined) body["due_on"] = flags.due;
+      if (flags.startOn !== undefined) body["start_on"] = flags.startOn;
+      if (notes !== undefined) body["notes"] = notes;
     }
 
     if (flags.dryRun) {

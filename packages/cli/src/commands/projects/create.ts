@@ -121,7 +121,7 @@ export const createCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.name) {
+      if (flags.name === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--name is required when not using --json",
@@ -129,19 +129,23 @@ export const createCommand = buildCommand({
         );
       }
       const name = v.parse(s.nonBlankText("name", 1024), flags.name);
-      const notes = flags.notes
-        ? v.parse(s.text("notes"), flags.notes)
-        : undefined;
-      if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
-      if (flags.team) v.parse(s.gid("team"), flags.team);
-      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
-      if (flags.dueOn) v.parse(s.date("due-on"), flags.dueOn);
-      if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
-      if (flags.defaultView)
+      const notes =
+        flags.notes !== undefined
+          ? v.parse(s.text("notes"), flags.notes)
+          : undefined;
+      if (flags.workspace !== undefined)
+        v.parse(s.gid("workspace"), flags.workspace);
+      if (flags.team !== undefined) v.parse(s.gid("team"), flags.team);
+      if (flags.color !== undefined)
+        v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
+      if (flags.dueOn !== undefined) v.parse(s.date("due-on"), flags.dueOn);
+      if (flags.startOn !== undefined)
+        v.parse(s.date("start-on"), flags.startOn);
+      if (flags.defaultView !== undefined)
         v.parse(s.enumOf("default-view", PROJECT_VIEWS), flags.defaultView);
 
       let workspace = flags.workspace;
-      if (!workspace && !flags.dryRun) {
+      if (workspace === undefined && !flags.dryRun) {
         const auth = resolveAuth({ account: flags.account });
         workspace = auth.workspaceGid;
         if (!workspace) {
@@ -154,13 +158,14 @@ export const createCommand = buildCommand({
       }
 
       body = { name };
-      if (workspace) body["workspace"] = workspace;
-      if (flags.team) body["team"] = flags.team;
-      if (flags.color) body["color"] = flags.color;
-      if (notes) body["notes"] = notes;
-      if (flags.dueOn) body["due_on"] = flags.dueOn;
-      if (flags.startOn) body["start_on"] = flags.startOn;
-      if (flags.defaultView) body["default_view"] = flags.defaultView;
+      if (workspace !== undefined) body["workspace"] = workspace;
+      if (flags.team !== undefined) body["team"] = flags.team;
+      if (flags.color !== undefined) body["color"] = flags.color;
+      if (notes !== undefined) body["notes"] = notes;
+      if (flags.dueOn !== undefined) body["due_on"] = flags.dueOn;
+      if (flags.startOn !== undefined) body["start_on"] = flags.startOn;
+      if (flags.defaultView !== undefined)
+        body["default_view"] = flags.defaultView;
     }
 
     if (flags.dryRun) {

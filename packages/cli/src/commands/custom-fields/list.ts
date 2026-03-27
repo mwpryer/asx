@@ -38,7 +38,8 @@ export const listCommand = buildCommand({
       FieldsFlag &
       PaginationFlags & { workspace: string | undefined },
   ) {
-    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
+    if (flags.workspace !== undefined)
+      v.parse(s.gid("workspace"), flags.workspace);
 
     const auth = resolveAuth({ account: flags.account });
     const workspace = flags.workspace ?? auth.workspaceGid;

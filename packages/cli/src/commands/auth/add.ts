@@ -65,7 +65,7 @@ export const addCommand = buildCommand({
       optFields: ["name", "email", "workspaces", "workspaces.name"],
     });
 
-    if (flags.workspace) {
+    if (flags.workspace !== undefined) {
       v.parse(s.gid("workspace"), flags.workspace);
       const memberGids = (res.data.workspaces ?? []).map((w) => w.gid);
       if (!memberGids.includes(flags.workspace)) {

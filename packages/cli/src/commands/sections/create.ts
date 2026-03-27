@@ -58,7 +58,7 @@ export const createCommand = buildCommand({
       );
     }
 
-    if (flags.project) v.parse(s.gid("project"), flags.project);
+    if (flags.project !== undefined) v.parse(s.gid("project"), flags.project);
     const projectGid: string | undefined = flags.project;
 
     let body: Record<string, unknown>;
@@ -66,14 +66,14 @@ export const createCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.name) {
+      if (flags.name === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--name is required when not using --json",
           "Provide --name or use --json with a JSON object containing a name field",
         );
       }
-      if (!flags.project) {
+      if (flags.project === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--project is required when not using --json",

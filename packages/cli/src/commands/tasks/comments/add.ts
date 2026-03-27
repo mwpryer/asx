@@ -62,7 +62,7 @@ export const addCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.text) {
+      if (flags.text === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--text is required when not using --json",

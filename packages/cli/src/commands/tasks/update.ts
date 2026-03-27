@@ -107,15 +107,16 @@ export const updateCommand = buildCommand({
         flags.notes !== undefined
           ? v.parse(s.text("notes"), flags.notes)
           : undefined;
-      if (flags.assignee) v.parse(s.assignee(), flags.assignee);
-      if (flags.due) v.parse(s.date("due"), flags.due);
-      if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
+      if (flags.assignee !== undefined) v.parse(s.assignee(), flags.assignee);
+      if (flags.due !== undefined) v.parse(s.date("due"), flags.due);
+      if (flags.startOn !== undefined)
+        v.parse(s.date("start-on"), flags.startOn);
 
       body = {};
       if (name !== undefined) body["name"] = name;
-      if (flags.assignee) body["assignee"] = flags.assignee;
-      if (flags.due) body["due_on"] = flags.due;
-      if (flags.startOn) body["start_on"] = flags.startOn;
+      if (flags.assignee !== undefined) body["assignee"] = flags.assignee;
+      if (flags.due !== undefined) body["due_on"] = flags.due;
+      if (flags.startOn !== undefined) body["start_on"] = flags.startOn;
       if (notes !== undefined) body["notes"] = notes;
 
       if (Object.keys(body).length === 0) {

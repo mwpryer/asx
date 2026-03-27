@@ -77,7 +77,8 @@ export const createCommand = buildCommand({
       );
     }
 
-    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
+    if (flags.workspace !== undefined)
+      v.parse(s.gid("workspace"), flags.workspace);
 
     let body: Record<string, unknown>;
     let workspace: string | undefined;
@@ -85,14 +86,14 @@ export const createCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.name) {
+      if (flags.name === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--name is required when not using --json",
           "Provide --name or use --json with a JSON object containing a name field",
         );
       }
-      if (!flags.resourceSubtype) {
+      if (flags.resourceSubtype === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--resource-subtype is required when not using --json",
@@ -104,12 +105,13 @@ export const createCommand = buildCommand({
         flags.resourceSubtype,
       );
       const name = v.parse(s.nonBlankText("name", 1024), flags.name);
-      const description = flags.description
-        ? v.parse(s.text("description"), flags.description)
-        : undefined;
+      const description =
+        flags.description !== undefined
+          ? v.parse(s.text("description"), flags.description)
+          : undefined;
 
       body = { name, resource_subtype: flags.resourceSubtype };
-      if (description) body["description"] = description;
+      if (description !== undefined) body["description"] = description;
     }
 
     if (!flags.dryRun) {

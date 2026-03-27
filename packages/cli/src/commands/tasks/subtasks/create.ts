@@ -91,7 +91,7 @@ export const createCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.name) {
+      if (flags.name === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--name is required when not using --json",
@@ -99,16 +99,17 @@ export const createCommand = buildCommand({
         );
       }
       const name = v.parse(s.nonBlankText("name", 1024), flags.name);
-      const notes = flags.notes
-        ? v.parse(s.text("notes"), flags.notes)
-        : undefined;
-      if (flags.assignee) v.parse(s.assignee(), flags.assignee);
-      if (flags.due) v.parse(s.date("due"), flags.due);
+      const notes =
+        flags.notes !== undefined
+          ? v.parse(s.text("notes"), flags.notes)
+          : undefined;
+      if (flags.assignee !== undefined) v.parse(s.assignee(), flags.assignee);
+      if (flags.due !== undefined) v.parse(s.date("due"), flags.due);
 
       body = { name };
-      if (flags.assignee) body["assignee"] = flags.assignee;
-      if (flags.due) body["due_on"] = flags.due;
-      if (notes) body["notes"] = notes;
+      if (flags.assignee !== undefined) body["assignee"] = flags.assignee;
+      if (flags.due !== undefined) body["due_on"] = flags.due;
+      if (notes !== undefined) body["notes"] = notes;
     }
 
     const path = `/tasks/${taskGid}/subtasks`;

@@ -53,13 +53,14 @@ export const listCommand = buildCommand({
         archived: boolean;
       },
   ) {
-    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
-    if (flags.team) v.parse(s.gid("team"), flags.team);
+    if (flags.workspace !== undefined)
+      v.parse(s.gid("workspace"), flags.workspace);
+    if (flags.team !== undefined) v.parse(s.gid("team"), flags.team);
 
     const auth = resolveAuth({ account: flags.account });
 
     let path: string;
-    if (flags.team) {
+    if (flags.team !== undefined) {
       path = `/teams/${flags.team}/projects`;
     } else {
       const workspace = flags.workspace ?? auth.workspaceGid;

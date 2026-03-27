@@ -84,7 +84,7 @@ export const createCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.title) {
+      if (flags.title === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--title is required when not using --json",
@@ -92,12 +92,16 @@ export const createCommand = buildCommand({
         );
       }
       const title = v.parse(s.nonBlankText("title", 1024), flags.title);
-      if (flags.color) v.parse(s.enumOf("color", STATUS_COLOURS), flags.color);
-      const text = flags.text ? v.parse(s.text("text"), flags.text) : undefined;
+      if (flags.color !== undefined)
+        v.parse(s.enumOf("color", STATUS_COLOURS), flags.color);
+      const text =
+        flags.text !== undefined
+          ? v.parse(s.text("text"), flags.text)
+          : undefined;
 
       body = { title };
-      if (flags.color) body["color"] = flags.color;
-      if (text) body["text"] = text;
+      if (flags.color !== undefined) body["color"] = flags.color;
+      if (text !== undefined) body["text"] = text;
     }
 
     const path = `/projects/${projectGid}/project_statuses`;

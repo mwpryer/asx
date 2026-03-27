@@ -115,14 +115,17 @@ export const searchCommand = buildCommand({
     query: string,
   ) {
     v.parse(s.nonBlankText("query"), query);
-    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
-    if (flags.assignee) v.parse(s.assignee(), flags.assignee);
-    if (flags.project) v.parse(s.gid("project"), flags.project);
-    if (flags.tag) v.parse(s.gid("tag"), flags.tag);
-    if (flags.section) v.parse(s.gid("section"), flags.section);
-    if (flags.dueBefore) v.parse(s.date("due-before"), flags.dueBefore);
-    if (flags.dueAfter) v.parse(s.date("due-after"), flags.dueAfter);
-    if (flags.sortBy)
+    if (flags.workspace !== undefined)
+      v.parse(s.gid("workspace"), flags.workspace);
+    if (flags.assignee !== undefined) v.parse(s.assignee(), flags.assignee);
+    if (flags.project !== undefined) v.parse(s.gid("project"), flags.project);
+    if (flags.tag !== undefined) v.parse(s.gid("tag"), flags.tag);
+    if (flags.section !== undefined) v.parse(s.gid("section"), flags.section);
+    if (flags.dueBefore !== undefined)
+      v.parse(s.date("due-before"), flags.dueBefore);
+    if (flags.dueAfter !== undefined)
+      v.parse(s.date("due-after"), flags.dueAfter);
+    if (flags.sortBy !== undefined)
       v.parse(
         s.enumOf("sort-by", [
           "due_date",
@@ -148,16 +151,18 @@ export const searchCommand = buildCommand({
       limit: resolveLimit(flags),
       ...(flags.offset && { offset: flags.offset }),
     };
-    if (flags.assignee) params["assignee.any"] = flags.assignee;
-    if (flags.project) params["projects.any"] = flags.project;
+    if (flags.assignee !== undefined) params["assignee.any"] = flags.assignee;
+    if (flags.project !== undefined) params["projects.any"] = flags.project;
     if (!flags.completed) params["completed"] = false;
-    if (flags.dueBefore) params["due_on.before"] = flags.dueBefore;
-    if (flags.dueAfter) params["due_on.after"] = flags.dueAfter;
-    if (flags.tag) params["tags.any"] = flags.tag;
-    if (flags.section) params["sections.any"] = flags.section;
+    if (flags.dueBefore !== undefined)
+      params["due_on.before"] = flags.dueBefore;
+    if (flags.dueAfter !== undefined) params["due_on.after"] = flags.dueAfter;
+    if (flags.tag !== undefined) params["tags.any"] = flags.tag;
+    if (flags.section !== undefined) params["sections.any"] = flags.section;
     if (flags.isSubtask) params["is_subtask"] = true;
-    if (flags.sortBy) params["sort_by"] = flags.sortBy;
-    if (flags.sortBy) params["sort_ascending"] = flags.sortAscending;
+    if (flags.sortBy !== undefined) params["sort_by"] = flags.sortBy;
+    if (flags.sortBy !== undefined)
+      params["sort_ascending"] = flags.sortAscending;
 
     await exec({
       ctx: this,

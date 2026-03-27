@@ -129,16 +129,18 @@ export const updateCommand = buildCommand({
         flags.notes !== undefined
           ? v.parse(s.text("notes"), flags.notes)
           : undefined;
-      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
-      if (flags.dueOn) v.parse(s.date("due-on"), flags.dueOn);
-      if (flags.startOn) v.parse(s.date("start-on"), flags.startOn);
+      if (flags.color !== undefined)
+        v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
+      if (flags.dueOn !== undefined) v.parse(s.date("due-on"), flags.dueOn);
+      if (flags.startOn !== undefined)
+        v.parse(s.date("start-on"), flags.startOn);
 
       body = {};
       if (name !== undefined) body["name"] = name;
       if (notes !== undefined) body["notes"] = notes;
-      if (flags.color) body["color"] = flags.color;
-      if (flags.dueOn) body["due_on"] = flags.dueOn;
-      if (flags.startOn) body["start_on"] = flags.startOn;
+      if (flags.color !== undefined) body["color"] = flags.color;
+      if (flags.dueOn !== undefined) body["due_on"] = flags.dueOn;
+      if (flags.startOn !== undefined) body["start_on"] = flags.startOn;
       if (flags.archive) body["archived"] = true;
       if (flags.unarchive) body["archived"] = false;
 

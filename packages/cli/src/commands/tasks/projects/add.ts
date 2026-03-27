@@ -40,11 +40,11 @@ export const addCommand = buildCommand({
   ) {
     v.parse(s.gid("task-gid"), taskGid);
     v.parse(s.gid("project-gid"), projectGid);
-    if (flags.section) v.parse(s.gid("section"), flags.section);
+    if (flags.section !== undefined) v.parse(s.gid("section"), flags.section);
 
     const path = `/tasks/${taskGid}/addProject`;
     const body: Record<string, string> = { project: projectGid };
-    if (flags.section) body["section"] = flags.section;
+    if (flags.section !== undefined) body["section"] = flags.section;
 
     if (flags.dryRun) {
       preview({

@@ -88,7 +88,7 @@ export const createCommand = buildCommand({
     if (flags.json) {
       body = parseJsonInput(flags.json);
     } else {
-      if (!flags.name) {
+      if (flags.name === undefined) {
         throw new InputError(
           "INPUT_MISSING",
           "--name is required when not using --json",
@@ -96,20 +96,23 @@ export const createCommand = buildCommand({
         );
       }
       const name = v.parse(s.nonBlankText("name", 1024), flags.name);
-      const notes = flags.notes
-        ? v.parse(s.text("notes"), flags.notes)
-        : undefined;
+      const notes =
+        flags.notes !== undefined
+          ? v.parse(s.text("notes"), flags.notes)
+          : undefined;
 
-      if (flags.color) v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
+      if (flags.color !== undefined)
+        v.parse(s.enumOf("color", PALETTE_COLOURS), flags.color);
 
       body = { name };
-      if (flags.color) body["color"] = flags.color;
-      if (notes) body["notes"] = notes;
+      if (flags.color !== undefined) body["color"] = flags.color;
+      if (notes !== undefined) body["notes"] = notes;
     }
 
-    if (flags.workspace) v.parse(s.gid("workspace"), flags.workspace);
+    if (flags.workspace !== undefined)
+      v.parse(s.gid("workspace"), flags.workspace);
     let workspace = flags.workspace;
-    if (!workspace && !flags.dryRun) {
+    if (workspace === undefined && !flags.dryRun) {
       const auth = resolveAuth({ account: flags.account });
       workspace = auth.workspaceGid;
       if (!workspace) {
@@ -121,9 +124,10 @@ export const createCommand = buildCommand({
       }
     }
 
-    const path = workspace
-      ? `/workspaces/${workspace}/tags`
-      : "/workspaces/{workspace_gid}/tags";
+    const path =
+      workspace !== undefined
+        ? `/workspaces/${workspace}/tags`
+        : "/workspaces/{workspace_gid}/tags";
 
     if (flags.dryRun) {
       preview({

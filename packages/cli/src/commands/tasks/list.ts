@@ -47,14 +47,14 @@ export const listCommand = buildCommand({
         section: string | undefined;
       },
   ) {
-    if (flags.project && flags.section) {
+    if (flags.project !== undefined && flags.section !== undefined) {
       throw new InputError(
         "INPUT_INVALID",
         "Cannot specify both --project and --section",
         "Use exactly one of --project or --section",
       );
     }
-    if (!flags.project && !flags.section) {
+    if (flags.project === undefined && flags.section === undefined) {
       throw new InputError(
         "INPUT_MISSING",
         "One of --project or --section is required",
@@ -62,12 +62,13 @@ export const listCommand = buildCommand({
       );
     }
 
-    if (flags.project) v.parse(s.gid("project"), flags.project);
-    if (flags.section) v.parse(s.gid("section"), flags.section);
+    if (flags.project !== undefined) v.parse(s.gid("project"), flags.project);
+    if (flags.section !== undefined) v.parse(s.gid("section"), flags.section);
 
-    const path = flags.project
-      ? `/projects/${flags.project}/tasks`
-      : `/sections/${flags.section}/tasks`;
+    const path =
+      flags.project !== undefined
+        ? `/projects/${flags.project}/tasks`
+        : `/sections/${flags.section}/tasks`;
 
     await exec({
       ctx: this,

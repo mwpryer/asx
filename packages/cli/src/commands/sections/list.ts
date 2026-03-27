@@ -40,7 +40,7 @@ export const listCommand = buildCommand({
         project: string | undefined;
       },
   ) {
-    if (!flags.project) {
+    if (flags.project === undefined) {
       throw new InputError(
         "INPUT_MISSING",
         "--project is required",
