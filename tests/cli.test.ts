@@ -9,7 +9,7 @@ const projectRoot = resolve(import.meta.dir, "..");
 let tmpDir: string;
 
 function writeCompiledSchema(schema: CompiledSchema): void {
-  const cacheDir = join(tmpDir, "cache", "asnx");
+  const cacheDir = join(tmpDir, "cache", "asx");
   mkdirSync(cacheDir, { recursive: true });
   writeFileSync(join(cacheDir, "schema.json"), JSON.stringify(schema));
 }
@@ -88,7 +88,7 @@ function writeIntrospectionSchema(): void {
 }
 
 beforeEach(() => {
-  tmpDir = mkdtempSync(join(tmpdir(), "asnx-"));
+  tmpDir = mkdtempSync(join(tmpdir(), "asx-"));
 });
 
 afterEach(() => {
@@ -231,7 +231,7 @@ describe("cli", () => {
 
     expect(result.exitCode).toBe(1);
     expect(payload.error.message).toBe('Unknown command "tasks".');
-    expect(payload.error.help).toContain("asnx schema update");
+    expect(payload.error.help).toContain("asx schema update");
   });
 
   test("auth add rejects an empty token", async () => {
@@ -272,7 +272,7 @@ describe("help output", () => {
     expect(stdout).toContain("schema");
     expect(stdout).toContain("tasks");
     expect(stdout).toContain("projects");
-    expect(stdout).toContain("asnx <command> --help");
+    expect(stdout).toContain("asx <command> --help");
   });
 
   test("entity --help lists actions with summaries", async () => {

@@ -1,15 +1,15 @@
 {
-  "name": "asnx-cli",
+  "name": "@mwpryer/asx",
   "version": "0.3.0",
   "description": "Agent-first Asana CLI with schema introspection",
   "license": "MIT",
   "author": "mwpryer",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mwpryer/asnx.git"
+    "url": "git+https://github.com/mwpryer/asx.git"
   },
   "bin": {
-    "asnx": "dist/index.js"
+    "asx": "dist/index.js"
   },
   "files": [
     "dist"

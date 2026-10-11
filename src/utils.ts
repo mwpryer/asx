@@ -37,7 +37,7 @@ export function xdgDir(type: "config" | "cache"): string {
     }
     base = join(home, fallback);
   }
-  return join(base, "asnx");
+  return join(base, "asx");
 }
 
 export function toKebab(str: string): string {
