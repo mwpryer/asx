@@ -1,6 +1,6 @@
 {
   "name": "@mwpryer/asx",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Agent-first Asana CLI with schema introspection",
   "license": "MIT",
   "author": "mwpryer",
