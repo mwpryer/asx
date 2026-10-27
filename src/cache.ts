@@ -4,6 +4,7 @@ import * as v from "valibot";
 
 import { compileSchema, type CompiledSchema } from "@/compiler";
 import { CliError, HTTP_TIMEOUT_MS, toCliError } from "@/errors";
+import { buildRoutes } from "@/router";
 import { xdgDir } from "@/utils";
 
 const SPEC_URL =
@@ -124,6 +125,8 @@ export async function updateSchemaCache(): Promise<CompiledSchema> {
   }
   const yaml = await response.text();
   const compiledSchema = compileSchema(yaml, SPEC_URL);
+  // Fail before a spec that breaks routing replaces the working cache
+  buildRoutes(compiledSchema);
   try {
     mkdirSync(xdgDir("cache"), { recursive: true });
     writeFileSync(getCachedSchemaPath(), JSON.stringify(compiledSchema));

@@ -256,6 +256,38 @@ describe("loadCachedSchema", () => {
 });
 
 describe("updateSchemaCache", () => {
+  test("keeps the cached schema when the new spec breaks routing", async () => {
+    const cacheDir = join(tmpDir, "asx");
+    mkdirSync(cacheDir, { recursive: true });
+    writeFileSync(
+      join(cacheDir, "schema.json"),
+      JSON.stringify({
+        version: "1.0",
+        generated: "2026-01-01T00:00:00.000Z",
+        source: "test",
+        stats: { endpointCount: 0, bodyEndpointCount: 0, fieldCount: 0 },
+        endpoints: [],
+      }),
+    );
+    globalThis.fetch = (async () =>
+      new Response(
+        [
+          'openapi: "3.0.0"',
+          'info: { title: test, version: "2.0" }',
+          "paths:",
+          "  /tags/{tag_gid}:",
+          "    get: { tags: [Tags], summary: Get a tag }",
+          "  /tags/{tag_id}:",
+          "    get: { tags: [Tags], summary: Get a tag again }",
+        ].join("\n"),
+      )) as unknown as typeof fetch;
+
+    await expect(updateSchemaCache()).rejects.toThrow(
+      'Route action collision for entity "tags": "get".',
+    );
+    expect(loadCachedSchema().version).toBe("1.0");
+  });
+
   test("wraps cache write failures as config errors", async () => {
     const cacheDir = join(tmpDir, "asx");
     mkdirSync(tmpDir, { recursive: true });
