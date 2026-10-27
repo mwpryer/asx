@@ -16,12 +16,9 @@
   <img src="docs/demo.gif" alt="asx demo" width="800">
 </p>
 
-> [!IMPORTANT]
-> This project is under active development. Expect breaking changes before v1.0.
-
 ## Why `asx`
 
-`asx` is generated from the Asana OpenAPI spec, not hand-written. Commands come straight from the schema, so when Asana ships a new endpoint you can pull it in yourself with `asx schema update` instead of waiting on a release. The same schema makes the whole surface introspectable, with every command, flag, and response shape described in JSON.
+`asx` is generated from the Asana OpenAPI spec, not hand-written. Commands come straight from the schema, so when Asana ships a new endpoint you can pull it in yourself with `asx schema update` instead of waiting on a release. Command names follow the spec too, so they change when Asana renames an endpoint, whatever the `asx` version. The same schema makes the whole surface introspectable, with every command, flag, and response shape described in JSON.
 
 `asx` was built for agents from the start. `--json` takes the raw API payload one-to-one. `--opt-fields` keeps responses from swamping an agent's context. `--dry-run` shows the exact request before it is sent, and flags are checked against the OpenAPI types, so bad calls fail locally instead of at the API.
 
