@@ -223,6 +223,43 @@ describe("cli", () => {
     expect(payload.data).not.toHaveProperty("args");
   });
 
+  test("dry-run before the action still previews the request", async () => {
+    writeIntrospectionSchema();
+
+    const result = await runCli([
+      "tasks",
+      "--dry-run",
+      "create",
+      "--name",
+      "x",
+    ]);
+
+    expect(JSON.parse(result.stdout).meta).toEqual({
+      command: "tasks.create",
+      dryRun: true,
+    });
+  });
+
+  test("a flag missing its value is a usage error", async () => {
+    writeIntrospectionSchema();
+
+    const result = await runCli(["tasks", "create", "--name", "--dry-run"]);
+
+    expect(JSON.parse(result.stderr).error.message).toStartWith(
+      "Option '--name' argument is ambiguous.",
+    );
+  });
+
+  test("unknown flags are a usage error", async () => {
+    writeIntrospectionSchema();
+
+    const result = await runCli(["tasks", "get", "123", "--bogus", "x"]);
+
+    expect(JSON.parse(result.stderr).error.message).toStartWith(
+      "Unknown option '--bogus'.",
+    );
+  });
+
   test("unknown command without cached schema suggests schema update", async () => {
     const result = await runCli(["tasks", "get", "123"]);
     const payload = JSON.parse(result.stderr) as {
@@ -302,14 +339,20 @@ describe("help output", () => {
     expect(stdout).toContain("--account");
   });
 
-  test("unknown entity with cached schema prints usage and an error", async () => {
+  test("unknown entity with cached schema is a json usage error", async () => {
     writeIntrospectionSchema();
 
     const result = await runCli(["bogus"]);
 
     expect(result.exitCode).toBe(1);
-    expect(stripAnsi(result.stdout)).toContain("USAGE");
-    expect(stripAnsi(result.stderr)).toContain("Unknown command bogus");
+    expect(result.stdout).toBe("");
+    expect(JSON.parse(result.stderr)).toEqual({
+      error: {
+        status: null,
+        message: "Unknown command bogus",
+        help: "Add --help to the command for usage.",
+      },
+    });
   });
 });
 

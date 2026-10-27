@@ -1,4 +1,3 @@
-import { GLOBAL_FLAG_DEFS } from "@/args";
 import type { AsanaRequest } from "@/client";
 import type {
   EndpointField,
@@ -8,12 +7,13 @@ import type {
 import { CliError } from "@/errors";
 import { isPlainObject, toKebab } from "@/utils";
 
-export type FlagValue = string | boolean | string[];
+// Values from node:util parseArgs
+type FlagValues = Record<string, string | boolean | undefined>;
 
 interface CollectedFlag {
   field: EndpointField;
   cliName: string;
-  value: FlagValue;
+  value: string;
 }
 
 interface InputSource {
@@ -22,12 +22,10 @@ interface InputSource {
 }
 
 interface CollectedInput {
-  positionals: (string | undefined)[];
+  positionals: string[];
   queryFlags: CollectedFlag[];
   bodyFlags: CollectedFlag[];
   jsonBody?: string;
-  // Keep raw argv, Citty parse is non-strict
-  rawArgs?: string[];
 }
 
 interface ValidatedInput {
@@ -37,6 +35,8 @@ interface ValidatedInput {
 }
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const INTEGER_RE = /^-?\d+$/;
+const NUMBER_RE = /^-?\d+(\.\d+)?$/;
 
 function sourceLabel(source: InputSource): string {
   return source.kind === "flag"
@@ -99,94 +99,16 @@ function parseJsonBody(jsonStr: string): Record<string, unknown> {
 
 function collectProvidedFlags(
   fields: EndpointField[],
-  parsed: Record<string, unknown>,
+  values: FlagValues,
 ): CollectedFlag[] {
   return fields.flatMap((field) => {
     const cliName = toKebab(field.name);
-    const value = parsed[cliName];
-    if (value == null) {
+    const value = values[cliName];
+    if (typeof value !== "string") {
       return [];
     }
-    // Cast safe: validateFlagValue rechecks the shape downstream
-    return [{ field, cliName, value: value as FlagValue }];
+    return [{ field, cliName, value }];
   });
-}
-
-function buildKnownFlagMap(
-  endpoint: EndpointSpec,
-): Map<string, "boolean" | "string"> {
-  const known = new Map<string, "boolean" | "string">();
-
-  for (const [name, def] of Object.entries(GLOBAL_FLAG_DEFS)) {
-    known.set(name, def.type === "boolean" ? "boolean" : "string");
-  }
-  // Citty injects --help implicitly
-  known.set("help", "boolean");
-
-  for (const field of endpoint.queryFields) {
-    known.set(toKebab(field.name), "string");
-  }
-
-  for (const field of endpoint.bodyFields) {
-    known.set(toKebab(field.name), "string");
-  }
-
-  return known;
-}
-
-// Recheck raw argv, Citty parse is permissive
-function validateRawArgs(endpoint: EndpointSpec, rawArgs?: string[]): void {
-  if (!rawArgs) {
-    return;
-  }
-
-  const known = buildKnownFlagMap(endpoint);
-
-  for (let i = 0; i < rawArgs.length; i += 1) {
-    const arg = rawArgs[i]!;
-    if (arg === "--") {
-      break;
-    }
-    if (!arg.startsWith("-") || arg === "-") {
-      continue;
-    }
-    if (!arg.startsWith("--")) {
-      throw new CliError({
-        kind: "usage",
-        message: `Unknown flag ${arg}.`,
-      });
-    }
-
-    const negated = arg.startsWith("--no-");
-    const token = negated ? arg.slice(5) : arg.slice(2);
-    const eqIndex = token.indexOf("=");
-    const name = eqIndex === -1 ? token : token.slice(0, eqIndex);
-    const flagType = known.get(name);
-
-    if (!flagType) {
-      throw new CliError({
-        kind: "usage",
-        message: `Unknown flag --${name}.`,
-      });
-    }
-
-    if (negated && flagType !== "boolean") {
-      throw new CliError({
-        kind: "usage",
-        // Preserve --no-json in error text
-        message: `Unknown flag ${arg}.`,
-      });
-    }
-
-    if (
-      !negated &&
-      eqIndex === -1 &&
-      flagType === "string" &&
-      i + 1 < rawArgs.length
-    ) {
-      i += 1;
-    }
-  }
 }
 
 function validateDate(value: string, source: InputSource): void {
@@ -221,10 +143,9 @@ function validateEnum(
   }
 }
 
-function splitCsv(value: string | string[]): string[] {
-  const values = Array.isArray(value) ? value : [value];
-  return values
-    .flatMap((entry) => entry.split(","))
+function splitCsv(value: string): string[] {
+  return value
+    .split(",")
     .map((entry) => entry.trim())
     .filter(Boolean);
 }
@@ -236,18 +157,16 @@ function coerceFlagScalar(
 ): string | number | boolean {
   switch (type) {
     case "integer": {
-      const n = parseInt(value, 10);
-      if (Number.isNaN(n)) {
+      if (!INTEGER_RE.test(value)) {
         throw invalidTypeError(source, "integer", value);
       }
-      return n;
+      return Number(value);
     }
     case "number": {
-      const n = parseFloat(value);
-      if (Number.isNaN(n)) {
+      if (!NUMBER_RE.test(value)) {
         throw invalidTypeError(source, "number", value);
       }
-      return n;
+      return Number(value);
     }
     case "boolean": {
       if (value === "true") {
@@ -299,14 +218,10 @@ function validateJsonScalar(
 }
 
 function validateFlagArray(
-  value: FlagValue,
+  value: string,
   items: EndpointFieldItems | undefined,
   source: InputSource,
 ): unknown[] {
-  if (typeof value === "boolean") {
-    throw invalidTypeError(source, "comma-separated list", value);
-  }
-
   const itemType = items?.type ?? "string";
   return splitCsv(value).map((entry) => {
     const coerced = coerceFlagScalar(entry, itemType, source);
@@ -382,7 +297,7 @@ function validateJsonAgainstTypes(
 
 function validateFlagValue(
   field: EndpointField,
-  value: FlagValue,
+  value: string,
   source: InputSource,
 ): unknown {
   if (field.type === "array") {
@@ -396,14 +311,7 @@ function validateFlagValue(
     });
   }
 
-  if (Array.isArray(value)) {
-    throw invalidTypeError(source, field.type);
-  }
-
-  const coerced =
-    typeof value === "string"
-      ? coerceFlagScalar(value, field.type, source)
-      : value;
+  const coerced = coerceFlagScalar(value, field.type, source);
 
   if (typeof coerced === "string" && field.format === "date") {
     validateDate(coerced, source);
@@ -479,7 +387,7 @@ function validateJsonBody(
 function buildPathFromPositionals(
   path: string,
   pathParams: EndpointField[],
-  positionals: (string | undefined)[],
+  positionals: string[],
 ): string {
   let filledPath = path;
 
@@ -530,17 +438,14 @@ function validateRequiredBody(
 
 export function collectInput(
   endpoint: EndpointSpec,
-  parsed: Record<string, unknown>,
-  rawArgs?: string[],
+  values: FlagValues,
+  positionals: string[],
 ): CollectedInput {
   return {
-    positionals: endpoint.pathParams.map(
-      (field) => parsed[toKebab(field.name)] as string | undefined,
-    ),
-    queryFlags: collectProvidedFlags(endpoint.queryFields, parsed),
-    bodyFlags: collectProvidedFlags(endpoint.bodyFields, parsed),
-    jsonBody: typeof parsed.json === "string" ? parsed.json : undefined,
-    rawArgs,
+    positionals,
+    queryFlags: collectProvidedFlags(endpoint.queryFields, values),
+    bodyFlags: collectProvidedFlags(endpoint.bodyFields, values),
+    jsonBody: typeof values.json === "string" ? values.json : undefined,
   };
 }
 
@@ -548,8 +453,6 @@ export function validateInput(
   endpoint: EndpointSpec,
   input: CollectedInput,
 ): ValidatedInput {
-  validateRawArgs(endpoint, input.rawArgs);
-
   const path = buildPathFromPositionals(
     endpoint.path,
     endpoint.pathParams,

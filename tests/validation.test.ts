@@ -1,13 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { compileSchema, type EndpointSpec } from "@/compiler";
-import { toKebab } from "@/utils";
-import {
-  buildHttpRequest,
-  collectInput,
-  type FlagValue,
-  validateInput,
-} from "@/validation";
+import { buildHttpRequest, collectInput, validateInput } from "@/validation";
 
 type RequestDataBody = {
   data: Record<string, unknown>;
@@ -15,22 +9,12 @@ type RequestDataBody = {
 
 function createRequest(
   endpoint: EndpointSpec,
-  positionals: (string | undefined)[],
-  flags: Record<string, FlagValue>,
-  rawArgs?: string[],
+  positionals: string[],
+  flags: Record<string, string>,
 ) {
-  const parsed: Record<string, unknown> = { ...flags };
-
-  endpoint.pathParams.forEach((field, index) => {
-    const value = positionals[index];
-    if (value != null) {
-      parsed[toKebab(field.name)] = value;
-    }
-  });
-
   return buildHttpRequest(
     endpoint,
-    validateInput(endpoint, collectInput(endpoint, parsed, rawArgs)),
+    validateInput(endpoint, collectInput(endpoint, flags, positionals)),
   );
 }
 
@@ -78,6 +62,10 @@ const taskSearchGet: EndpointSpec = {
       name: "due_on",
       type: "string",
       format: "date",
+    },
+    {
+      name: "limit",
+      type: "integer",
     },
   ],
   bodyFields: [],
@@ -278,6 +266,14 @@ describe("buildHttpRequest", () => {
     ).toThrow("not a real calendar date");
   });
 
+  test("query integers reject trailing characters", () => {
+    expect(() =>
+      createRequest(taskSearchGet, ["123"], {
+        limit: "12abc",
+      }),
+    ).toThrow('Flag --limit: expected integer, got "12abc".');
+  });
+
   test("query csv enum values are validated", () => {
     expect(() =>
       createRequest(taskCountsGet, ["abc"], {
@@ -332,18 +328,6 @@ describe("buildHttpRequest", () => {
     expect(request.body).toEqual({
       data: { name: "bugfix", projects: ["def", "ghi"] },
     });
-  });
-
-  test("raw unknown flags are still rejected after parser filtering", () => {
-    expect(() =>
-      createRequest(taskGet, ["abc"], {}, ["abc", "--bogus", "val"]),
-    ).toThrow("Unknown flag --bogus");
-  });
-
-  test("negated string flags report the original token", () => {
-    expect(() =>
-      createRequest(taskGet, ["abc"], {}, ["abc", "--no-json"]),
-    ).toThrow("Unknown flag --no-json");
   });
 
   test("path + body params together", () => {

@@ -29,6 +29,8 @@ asx tasks create --json '{"name":"bugfix","projects":["def"]}'
 
 `--json` expects raw request fields only, not a full Asana `{ "data": ... }` envelope.
 
+A flag value that starts with `-` needs `=`, for example `--notes='- item'`.
+
 ## Output
 
 Successful commands emit a JSON envelope with `meta` and `data`:

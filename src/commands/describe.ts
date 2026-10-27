@@ -1,7 +1,7 @@
 import { defineCommand } from "citty";
 
 import { loadCachedSchema } from "@/cache";
-import { CliError, runOrExit } from "@/errors";
+import { CliError } from "@/errors";
 import { printSuccess } from "@/output";
 import { buildRoutes, resolveRoute } from "@/router";
 
@@ -15,7 +15,7 @@ export const describeCommand = defineCommand({
       required: false,
     },
   },
-  run: runOrExit(({ args }) => {
+  run: ({ args }) => {
     const routes = buildRoutes(loadCachedSchema());
     const { entity, action } = args;
 
@@ -55,5 +55,5 @@ export const describeCommand = defineCommand({
     }
 
     printSuccess("describe.endpoint", endpoint);
-  }),
+  },
 });

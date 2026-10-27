@@ -1,4 +1,4 @@
-import { defineCommand, runMain, type SubCommandsDef } from "citty";
+import { defineCommand, runCommand, runMain, type SubCommandsDef } from "citty";
 
 import { hasCachedSchema, loadCachedSchema } from "@/cache";
 import { buildEntityCommands } from "@/commands/api";
@@ -17,6 +17,8 @@ const DESCRIPTION =
     ? __ASX_DESCRIPTION__
     : "Agent-first Asana CLI with schema introspection";
 
+const rawArgs = process.argv.slice(2);
+
 const main = defineCommand({
   meta: {
     name: "asx",
@@ -30,7 +32,7 @@ const main = defineCommand({
       schema: schemaCommand,
     };
     // Mirror citty's subcommand resolution: first arg not starting with "-"
-    const topLevel = process.argv.slice(2).find((arg) => !arg.startsWith("-"));
+    const topLevel = rawArgs.find((arg) => !arg.startsWith("-"));
 
     // Bootstrap commands stay usable before schema cache exists
     if (topLevel && topLevel in commands) {
@@ -62,4 +64,16 @@ const main = defineCommand({
   },
 });
 
-runMain(main);
+// runMain prints usage errors as text, so it only handles help and version
+if (
+  rawArgs.some((arg) => arg === "--help" || arg === "-h") ||
+  (rawArgs.length === 1 && (rawArgs[0] === "--version" || rawArgs[0] === "-v"))
+) {
+  await runMain(main);
+} else {
+  try {
+    await runCommand(main, { rawArgs });
+  } catch (err) {
+    exitWithError(err);
+  }
+}

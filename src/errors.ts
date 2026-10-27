@@ -1,4 +1,4 @@
-import type { ArgsDef, CommandContext } from "citty";
+import { stripVTControlCharacters } from "node:util";
 
 import { printError, type JsonStream } from "@/output";
 
@@ -49,6 +49,21 @@ export function toCliError(err: unknown): CliError {
   }
 
   if (err instanceof Error) {
+    // Bad argv: citty's coloured routing errors and strict flag parsing in api.ts
+    if (
+      err.name === "CLIError" ||
+      ("code" in err &&
+        typeof err.code === "string" &&
+        err.code.startsWith("ERR_PARSE_ARGS_"))
+    ) {
+      return new CliError({
+        kind: "usage",
+        message: stripVTControlCharacters(err.message),
+        help: "Add --help to the command for usage.",
+        cause: err,
+      });
+    }
+
     if (err.name === "TimeoutError" || err.name === "AbortError") {
       return new CliError({
         kind: "transport",
@@ -109,16 +124,4 @@ export function exitWithError(
 
   exit(1);
   throw new Error("unreachable");
-}
-
-export function runOrExit<T extends ArgsDef = ArgsDef>(
-  run: (context: CommandContext<T>) => unknown | Promise<unknown>,
-): (context: CommandContext<T>) => Promise<unknown> {
-  return async (context) => {
-    try {
-      return await run(context);
-    } catch (err) {
-      exitWithError(err);
-    }
-  };
 }

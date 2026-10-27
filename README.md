@@ -104,6 +104,8 @@ What makes it usable for agents:
 | `--limit N`        | Page size for list commands                                    |
 | `--offset <token>` | Pagination cursor from a previous response                     |
 
+A value that starts with `-` needs `=`, for example `--notes="- item"`.
+
 ## Output
 
 Commands emit a JSON envelope to stdout on success:
