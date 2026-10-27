@@ -502,17 +502,11 @@ function extractBodyField(
   return field;
 }
 
-// Only JSON bodies, writable payload under data
+// Writable payload under data
 function extractBody(
   spec: OpenApiSpec,
-  body: OpenApiRefable<OpenApiRequestBody>,
+  jsonContent: OpenApiMediaType,
 ): EndpointField[] {
-  const resolvedBody = resolveRef(spec, body);
-  const jsonContent = resolvedBody?.content?.["application/json"];
-  if (!jsonContent) {
-    return [];
-  }
-
   const requestSchema = flattenSchema(spec, jsonContent.schema);
   const dataSchema = flattenSchema(
     spec,
@@ -585,7 +579,15 @@ export function compileSchema(
         "query",
       );
       const hasBody = method !== "get" && method !== "delete";
-      const bodyFields = hasBody ? extractBody(spec, op.requestBody) : [];
+      const requestBody = hasBody
+        ? resolveRef(spec, op.requestBody)
+        : undefined;
+      const jsonContent = requestBody?.content?.["application/json"];
+      // Client sends JSON only, so multipart uploads would always fail
+      if (requestBody && !jsonContent) {
+        continue;
+      }
+      const bodyFields = jsonContent ? extractBody(spec, jsonContent) : [];
 
       // Path, query, and body share one CLI flag namespace with the global flags
       const seenFlagNames = new Set([...Object.keys(GLOBAL_FLAG_DEFS), "help"]);

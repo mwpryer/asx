@@ -802,6 +802,35 @@ paths:
   });
 });
 
+describe("non-JSON request bodies", () => {
+  test("multipart-only operations are skipped", () => {
+    const spec = `
+openapi: "3.0.0"
+info: { title: test, version: "1.0" }
+paths:
+  /attachments:
+    get:
+      tags: [Attachments]
+      summary: Get attachments from an object
+    post:
+      tags: [Attachments]
+      summary: Upload an attachment
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+`;
+    const schema = compileSchema(spec, "test");
+
+    expect(
+      schema.endpoints.map((endpoint) => `${endpoint.method} ${endpoint.path}`),
+    ).toEqual(["GET /attachments"]);
+  });
+});
+
 describe("invalid OpenAPI input", () => {
   test("malformed yaml is wrapped as a config error", () => {
     try {

@@ -69,6 +69,6 @@ Errors go to stderr as `{"error":{"status":...,"message":...,"help":...}}`. `sta
 - `tasks duplicate` and `projects duplicate` do not carry over every association. A duplicated task comes back with no project membership (`projects: []`) unless you pass `--include` naming the elements to copy, e.g. `--include projects,subtasks,assignee`.
 - `stories for-task` and `stories for-goal` return comments and system events together. Comments are the entries with `"type": "comment"`; filter client-side.
 - `tasks search` is eventually-consistent. Verify recent writes with `tasks get` or `tasks for-project`, not `search`.
-- `attachments create` is multipart on Asana's side and this CLI is JSON-only; the action surfaces but always fails. Use the raw API for file uploads.
+- There is no `attachments create`. Asana's upload endpoint is multipart and this CLI is JSON-only, so use the raw API for file uploads.
 - `project-briefs create-for-project` may reject plain `--text` with `Rich text should be wrapped in <body> tag.` If that happens, retry with `--html-text '<body>...</body>'`.
 - `<entity> remove-members --members me` (portfolios, projects, goals, teams) revokes your own access.
